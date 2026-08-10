@@ -154,7 +154,7 @@
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 10px;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -330,7 +330,7 @@
             height: 100%;
             -webkit-overflow-scrolling: touch;
             flex: 1;
-            padding: 0;
+            padding: 8px;
         }
 
         .vault-card-wrap {
@@ -338,10 +338,8 @@
             width: 100%;
             height: 100%;
             -webkit-overflow-scrolling: touch;
+            padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
             flex: 1;
-            scroll-behavior: smooth;
-            padding-top: 22px;
-            padding-bottom:8px;
         }
 
         table {
@@ -352,8 +350,8 @@
         }
 
         th {
-            position: sticky; top: 0; z-index: 20;
-            background-color: #0f172a !important;
+            position: sticky; top: 0; z-index: 10;
+            background: #111827 !important;
             padding: 12px 10px;
             font-size: 11px;
             color: var(--text-muted);
@@ -464,31 +462,11 @@
         .card-grid { 
             display: flex; 
             flex-direction: column; 
-            gap: 16px; 
-            padding: 0 2px;
+              gap: 16px; 
+            padding: 25px 2px calc(env(safe-area-inset-bottom) + 40px) 2px; 
         }
-
-        .card-grid::before {
-            content: "";
-            display: block;
-            height: 2px;
-            flex-shrink: 0;
-        }
-
-        .card-grid::after {
-            content: "";
-            display: block;
-            height: max(16px, calc(env(safe-area-inset-bottom) + 16px));
-            flex-shrink: 0;
-        }
-
         .card-grid .fin-panel:last-child { margin-bottom: 0; }
-        .fin-panel { 
-            background: rgba(15,23,42,0.85); 
-            border-radius: 14px; 
-            padding: 15px 13px; 
-            border: 1px solid rgba(14,165,233,0.2); 
-        }
+        .fin-panel { background: rgba(15,23,42,0.85); border-radius: 14px; padding: 15px 13px; border: 1px solid rgba(14,165,233,0.2); }
     </style>
 </head>
 <body>
@@ -798,6 +776,7 @@ function filterRowsLocallyByDate(headers, rows, startStr, endStr) {
 }
 
 window.onload = async () => {
+    // Clean up temporary reload URL params if present
     if (window.location.search.includes('_v=')) {
         const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
@@ -1599,8 +1578,10 @@ document.addEventListener('touchmove', () => clearTimeout(longPressTimer));
 async function forceAppReload(indicator) {
     if (indicator) indicator.innerText = 'PURGING CACHE & FETCHING NEW DEPLOYMENT...';
     
+    // 1. Clear LocalStorage JSON Cache
     localStorage.removeItem("finance_data_cache_v3");
 
+    // 2. Clear all PWA Cache Storage
     if ('caches' in window) {
         try {
             const keys = await caches.keys();
@@ -1608,6 +1589,7 @@ async function forceAppReload(indicator) {
         } catch(e) { console.warn("Cache API clear failed:", e); }
     }
 
+    // 3. Unregister active Service Workers so the fresh sw.js & deployment are fetched
     if ('serviceWorker' in navigator) {
         try {
             const registrations = await navigator.serviceWorker.getRegistrations();
@@ -1617,14 +1599,14 @@ async function forceAppReload(indicator) {
         } catch(e) { console.warn("ServiceWorker unregister failed:", e); }
     }
 
+    // 4. Force hard reload with timestamp parameter to bypass HTTP browser cache
     const currentUrl = new URL(window.location.href);
     currentUrl.searchParams.set('_v', Date.now());
     window.location.href = currentUrl.toString();
 }
 
-/* TOUCH PULL-TO-REFRESH HANDLER FOR MOBILE DEVICES (STRICT THRESHOLDS) */
+/* TOUCH PULL-TO-REFRESH HANDLER FOR MOBILE DEVICES */
 let pullStartY = 0;
-let pullStartX = 0;
 let pullCurrentY = 0;
 let isPullGesture = false;
 
@@ -1632,8 +1614,6 @@ document.addEventListener('touchstart', function(e) {
     const scrollTarget = document.querySelector('.vault-card-wrap, .table-wrap, #displayArea');
     if (!scrollTarget || scrollTarget.scrollTop <= 0) {
         pullStartY = e.touches[0].clientY;
-        pullStartX = e.touches[0].clientX;
-        pullCurrentY = pullStartY;
         isPullGesture = true;
     } else {
         isPullGesture = false;
@@ -1645,30 +1625,16 @@ document.addEventListener('touchmove', function(e) {
     const scrollTarget = document.querySelector('.vault-card-wrap, .table-wrap, #displayArea');
     if (scrollTarget && scrollTarget.scrollTop > 0) {
         isPullGesture = false;
-        const indicator = document.getElementById('pull-refresh-indicator');
-        if (indicator) indicator.style.display = 'none';
         return;
     }
-
-    pullCurrentY = e.touches[0].clientY;
-    const currentX = e.touches[0].clientX;
     
-    const distY = pullCurrentY - pullStartY;
-    const distX = Math.abs(currentX - pullStartX);
-
-    // Cancel gesture if user is swiping horizontally
-    if (distX > Math.abs(distY) && distY < 30) {
-        isPullGesture = false;
-        const indicator = document.getElementById('pull-refresh-indicator');
-        if (indicator) indicator.style.display = 'none';
-        return;
-    }
-
+    pullCurrentY = e.touches[0].clientY;
+    const dist = pullCurrentY - pullStartY;
     const indicator = document.getElementById('pull-refresh-indicator');
 
-    if (indicator && distY > 40) { // Require 40px drag before showing indicator
+    if (indicator && dist > 15) {
         indicator.style.display = 'block';
-        if (distY > 130) { // Require 130px pull to trigger refresh
+        if (dist > 65) {
             indicator.innerText = 'RELEASE TO FETCH NEW DEPLOYMENT 🔄';
         } else {
             indicator.innerText = '↓ PULL DOWN TO REFRESH';
@@ -1678,18 +1644,17 @@ document.addEventListener('touchmove', function(e) {
 
 document.addEventListener('touchend', function() {
     if (!isPullGesture) return;
-    const distY = pullCurrentY - pullStartY;
+    const dist = pullCurrentY - pullStartY;
     const indicator = document.getElementById('pull-refresh-indicator');
 
-    if (distY > 130) { // Trigger only if pulled down > 130px
+    if (dist > 65) {
         forceAppReload(indicator);
     } else if (indicator) {
         indicator.style.display = 'none';
     }
-
+    
     isPullGesture = false;
     pullStartY = 0;
-    pullStartX = 0;
     pullCurrentY = 0;
 });
 
