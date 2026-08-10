@@ -559,7 +559,7 @@
         </div>
 
         <div id="displayArea">
-            <div id="pull-refresh-indicator">↓ PULL DOWN TO REFRESH</div>
+            <div id="pull-refresh-indicator">↓ PULL DOWN TO SYNC</div>
         </div>
     </div>
 
@@ -673,7 +673,7 @@ function returnToDashboard() {
 
 function clearDisplayArea() {
     const area = document.getElementById('displayArea');
-    area.innerHTML = '<div id="pull-refresh-indicator">↓ PULL DOWN TO REFRESH</div>';
+    area.innerHTML = '<div id="pull-refresh-indicator">↓ PULL DOWN TO SYNC</div>';
 }
 
 function normalizeValue(val) {
@@ -989,7 +989,7 @@ async function viewNamedRange(rangeName) {
 
     try {
         const data = globalDataCache.namedRanges[rangeName];
-        let html = `<div id="pull-refresh-indicator">↓ PULL DOWN TO REFRESH</div><div class="vault-card-wrap"><div class="card-grid">`;
+        let html = `<div id="pull-refresh-indicator">↓ PULL DOWN TO SYNC</div><div class="vault-card-wrap"><div class="card-grid">`;
 
         data.rows.forEach(row => {
             if (rangeName === "Savings" && String(row[0]).trim().toLowerCase() === "total") return;
@@ -1244,7 +1244,7 @@ function renderTable(headers, rows) {
     if (idColIdx === -1) idColIdx = headers.length - 1;
 
     let html = `
-    <div id="pull-refresh-indicator">↓ PULL DOWN TO REFRESH</div>
+    <div id="pull-refresh-indicator">↓ PULL DOWN TO SYNC</div>
     <div class='sheet-card'>
         <div class='table-wrap' id="tableWrap">
            <table id="mainDataTable">
@@ -1605,7 +1605,7 @@ async function forceAppReload(indicator) {
     window.location.href = currentUrl.toString();
 }
 
-/* TOUCH PULL-TO-REFRESH HANDLER FOR MOBILE DEVICES */
+/* TOUCH PULL-TO-REFRESH HANDLER FOR MOBILE DEVICES (TRIGGERS SYNC) */
 let pullStartY = 0;
 let pullCurrentY = 0;
 let isPullGesture = false;
@@ -1635,9 +1635,9 @@ document.addEventListener('touchmove', function(e) {
     if (indicator && dist > 15) {
         indicator.style.display = 'block';
         if (dist > 65) {
-            indicator.innerText = 'RELEASE TO FETCH NEW DEPLOYMENT 🔄';
+            indicator.innerText = 'RELEASE TO SYNC LEDGER 🔄';
         } else {
-            indicator.innerText = '↓ PULL DOWN TO REFRESH';
+            indicator.innerText = '↓ PULL DOWN TO SYNC';
         }
     }
 }, { passive: true });
@@ -1648,7 +1648,8 @@ document.addEventListener('touchend', function() {
     const indicator = document.getElementById('pull-refresh-indicator');
 
     if (dist > 65) {
-        forceAppReload(indicator);
+        if (indicator) indicator.style.display = 'none';
+        syncAllData(true);
     } else if (indicator) {
         indicator.style.display = 'none';
     }
