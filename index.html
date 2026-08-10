@@ -294,6 +294,22 @@
             overflow: hidden;
         }
 
+        #pull-refresh-indicator {
+            display: none;
+            text-align: center;
+            padding: 6px 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: 1.5px;
+            background: rgba(14, 165, 233, 0.1);
+            border: 1px dashed rgba(14, 165, 233, 0.4);
+            border-radius: 10px;
+            margin-bottom: 6px;
+            flex-shrink: 0;
+        }
+
         .sheet-card {
             background: var(--surface);
             backdrop-filter: var(--glass-blur);
@@ -505,7 +521,7 @@
             <div class="toolbar-row">
                 <input type="text" id="dateRange" class="range-input" placeholder="📅 Date Range" readonly style="flex: 1.4; min-width: 0;">
                 <button class="btn-future" onclick="loadMain()" style="flex: 0.8; height: 42px;">Search</button>
-                <button class="btn-future" onclick="forceAppReload()" style="border-color: var(--success); color: var(--success); flex: 0.8; height: 42px;">
+                <button class="btn-future" onclick="syncAllData(true)" style="border-color: var(--success); color: var(--success); flex: 0.8; height: 42px;">
                     🔄 Sync
                 </button>
             </div>
@@ -542,7 +558,9 @@
             </div>
         </div>
 
-        <div id="displayArea"></div>
+        <div id="displayArea">
+            <div id="pull-refresh-indicator">↓ PULL DOWN TO REFRESH</div>
+        </div>
     </div>
 
     <div id="global-filter-modal" class="filter-modal-backdrop" onclick="closeFilterModal(event)">
@@ -655,7 +673,7 @@ function returnToDashboard() {
 
 function clearDisplayArea() {
     const area = document.getElementById('displayArea');
-    area.innerHTML = '';
+    area.innerHTML = '<div id="pull-refresh-indicator">↓ PULL DOWN TO REFRESH</div>';
 }
 
 function normalizeValue(val) {
@@ -971,7 +989,7 @@ async function viewNamedRange(rangeName) {
 
     try {
         const data = globalDataCache.namedRanges[rangeName];
-        let html = `<div class="vault-card-wrap"><div class="card-grid">`;
+        let html = `<div id="pull-refresh-indicator">↓ PULL DOWN TO REFRESH</div><div class="vault-card-wrap"><div class="card-grid">`;
 
         data.rows.forEach(row => {
             if (rangeName === "Savings" && String(row[0]).trim().toLowerCase() === "total") return;
@@ -1226,6 +1244,7 @@ function renderTable(headers, rows) {
     if (idColIdx === -1) idColIdx = headers.length - 1;
 
     let html = `
+    <div id="pull-refresh-indicator">↓ PULL DOWN TO REFRESH</div>
     <div class='sheet-card'>
         <div class='table-wrap' id="tableWrap">
            <table id="mainDataTable">
@@ -1556,8 +1575,8 @@ document.addEventListener('touchend', () => clearTimeout(longPressTimer));
 document.addEventListener('touchmove', () => clearTimeout(longPressTimer));
 
 /* DEEP CACHE PURGE & FORCE DEPLOYMENT RELOAD */
-async function forceAppReload() {
-    setProcessing(true, "PURGING CACHE & RELOADING...");
+async function forceAppReload(indicator) {
+    if (indicator) indicator.innerText = 'PURGING CACHE & FETCHING NEW DEPLOYMENT...';
     
     // 1. Clear LocalStorage JSON Cache
     localStorage.removeItem("finance_data_cache_v3");
@@ -1585,6 +1604,59 @@ async function forceAppReload() {
     currentUrl.searchParams.set('_v', Date.now());
     window.location.href = currentUrl.toString();
 }
+
+/* TOUCH PULL-TO-REFRESH HANDLER FOR MOBILE DEVICES */
+let pullStartY = 0;
+let pullCurrentY = 0;
+let isPullGesture = false;
+
+document.addEventListener('touchstart', function(e) {
+    const scrollTarget = document.querySelector('.vault-card-wrap, .table-wrap, #displayArea');
+    if (!scrollTarget || scrollTarget.scrollTop <= 0) {
+        pullStartY = e.touches[0].clientY;
+        isPullGesture = true;
+    } else {
+        isPullGesture = false;
+    }
+}, { passive: true });
+
+document.addEventListener('touchmove', function(e) {
+    if (!isPullGesture) return;
+    const scrollTarget = document.querySelector('.vault-card-wrap, .table-wrap, #displayArea');
+    if (scrollTarget && scrollTarget.scrollTop > 0) {
+        isPullGesture = false;
+        return;
+    }
+    
+    pullCurrentY = e.touches[0].clientY;
+    const dist = pullCurrentY - pullStartY;
+    const indicator = document.getElementById('pull-refresh-indicator');
+
+    if (indicator && dist > 15) {
+        indicator.style.display = 'block';
+        if (dist > 65) {
+            indicator.innerText = 'RELEASE TO FETCH NEW DEPLOYMENT 🔄';
+        } else {
+            indicator.innerText = '↓ PULL DOWN TO REFRESH';
+        }
+    }
+}, { passive: true });
+
+document.addEventListener('touchend', function() {
+    if (!isPullGesture) return;
+    const dist = pullCurrentY - pullStartY;
+    const indicator = document.getElementById('pull-refresh-indicator');
+
+    if (dist > 65) {
+        forceAppReload(indicator);
+    } else if (indicator) {
+        indicator.style.display = 'none';
+    }
+    
+    isPullGesture = false;
+    pullStartY = 0;
+    pullCurrentY = 0;
+});
 
 async function copyRowToClipboard(rowElement) {
     const table = document.getElementById('mainDataTable');
