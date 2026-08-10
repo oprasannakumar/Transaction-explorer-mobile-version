@@ -467,6 +467,7 @@
         }
         .card-grid .fin-panel:last-child { margin-bottom: 0; }
         .fin-panel { background: rgba(15,23,42,0.85); border-radius: 14px; padding: 15px 13px; border: 1px solid rgba(14,165,233,0.2); }
+
     </style>
 </head>
 <body>
@@ -616,6 +617,8 @@ let globalRawRows = [];
 let activeFilters = {};
 let activeModalField = null;
 let globalDataCache = null;
+let currentVaultOrigin = null;
+
 
 function toggleDashboard(show) {
     const dash = document.querySelector('.dashboard');
@@ -661,6 +664,13 @@ function resetDashboardToZero() {
 }
 
 function returnToDashboard() {
+    if (currentVaultOrigin) {
+        const targetVault = currentVaultOrigin;
+        currentVaultOrigin = null; // Reset origin after routing back
+        viewNamedRange(targetVault);
+        return;
+    }
+
     toggleDashboard(true);
     document.getElementById('table-toolbar-controls').style.display = 'none';
     document.getElementById('vault-toolbar-controls').style.display = 'none';
@@ -670,6 +680,7 @@ function returnToDashboard() {
     document.getElementById("selectedSheetLabel").innerText = "📄 Select Module";
     document.querySelectorAll(".sheet-option").forEach(opt => opt.classList.remove("active"));
 }
+
 
 function clearDisplayArea() {
     const area = document.getElementById('displayArea');
@@ -922,6 +933,7 @@ function toggleSheetDropdown(event) {
 
 let selectedSheetName = "";
 function selectSheet(name, el) {
+    currentVaultOrigin = null;
     selectedSheetName = name;
     document.getElementById("selectedSheetLabel").innerText = "📄 " + name;
     document.querySelectorAll(".sheet-option").forEach(opt => opt.classList.remove("active"));
@@ -976,7 +988,7 @@ async function loadMain() {
 async function viewNamedRange(rangeName) {
     if (sessionStorage.getItem("finance_auth_v3") !== "true") return;
     if (!globalDataCache) return;
-
+    currentVaultOrigin = rangeName;
     toggleDashboard(false);
     document.getElementById('table-toolbar-controls').style.display = 'none';
     
@@ -1085,6 +1097,7 @@ async function viewNamedRange(rangeName) {
 /* ACCOUNT SELECTION WITH DATE FILTER INTEGRATION */
 async function filterLedgerByEntity(type, query) {
     if (!globalDataCache) return;
+    currentVaultOrigin = type;
     currentTableMode = 'statement';
     setProcessing(true, `Filtering ${query}...`);
 
@@ -1566,13 +1579,8 @@ async function executeCommand(type) {
     else if (type === 'purge') deleteRecords();
 }
 
-document.addEventListener('touchstart', function(e) {
-    const row = e.target.closest('.data-row');
-    if (row) longPressTimer = setTimeout(() => showContextMenu(e, row), 550);
-}, {passive: true});
 
-document.addEventListener('touchend', () => clearTimeout(longPressTimer));
-document.addEventListener('touchmove', () => clearTimeout(longPressTimer));
+
 
 /* DEEP CACHE PURGE & FORCE DEPLOYMENT RELOAD */
 async function forceAppReload(indicator) {
@@ -1610,53 +1618,6 @@ let pullStartY = 0;
 let pullCurrentY = 0;
 let isPullGesture = false;
 
-document.addEventListener('touchstart', function(e) {
-    const scrollTarget = document.querySelector('.vault-card-wrap, .table-wrap, #displayArea');
-    if (!scrollTarget || scrollTarget.scrollTop <= 0) {
-        pullStartY = e.touches[0].clientY;
-        isPullGesture = true;
-    } else {
-        isPullGesture = false;
-    }
-}, { passive: true });
-
-document.addEventListener('touchmove', function(e) {
-    if (!isPullGesture) return;
-    const scrollTarget = document.querySelector('.vault-card-wrap, .table-wrap, #displayArea');
-    if (scrollTarget && scrollTarget.scrollTop > 0) {
-        isPullGesture = false;
-        return;
-    }
-    
-    pullCurrentY = e.touches[0].clientY;
-    const dist = pullCurrentY - pullStartY;
-    const indicator = document.getElementById('pull-refresh-indicator');
-
-    if (indicator && dist > 15) {
-        indicator.style.display = 'block';
-        if (dist > 65) {
-            indicator.innerText = 'RELEASE TO FETCH NEW DEPLOYMENT 🔄';
-        } else {
-            indicator.innerText = '↓ PULL DOWN TO REFRESH';
-        }
-    }
-}, { passive: true });
-
-document.addEventListener('touchend', function() {
-    if (!isPullGesture) return;
-    const dist = pullCurrentY - pullStartY;
-    const indicator = document.getElementById('pull-refresh-indicator');
-
-    if (dist > 65) {
-        forceAppReload(indicator);
-    } else if (indicator) {
-        indicator.style.display = 'none';
-    }
-    
-    isPullGesture = false;
-    pullStartY = 0;
-    pullCurrentY = 0;
-});
 
 async function copyRowToClipboard(rowElement) {
     const table = document.getElementById('mainDataTable');
