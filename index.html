@@ -771,6 +771,29 @@ function changeOverviewMonth(monthKey) {
     renderHomeOverview();
 }
 
+function toggleSliceVisibility(chartName, index, el) {
+    let chart = null;
+    if (chartName === 'expense') chart = currentExpenseChart;
+    else if (chartName === 'purpose') chart = currentPurposeChart;
+    else if (chartName === 'spentFor') chart = currentEntityChart;
+
+    if (!chart) return;
+
+    const isVisible = chart.getDataVisibility(index);
+    chart.toggleDataVisibility(index);
+    chart.update();
+
+    if (isVisible) {
+        el.style.opacity = '0.35';
+        const textSpan = el.querySelector('.legend-label-text');
+        if (textSpan) textSpan.style.textDecoration = 'line-through';
+    } else {
+        el.style.opacity = '1';
+        const textSpan = el.querySelector('.legend-label-text');
+        if (textSpan) textSpan.style.textDecoration = 'none';
+    }
+}
+
 function renderHomeOverview() {
     if (!globalDataCache) return;
 
@@ -872,7 +895,7 @@ function renderHomeOverview() {
     const netCashflow = totalMonthInflow - totalMonthOutflow;
     const dailyBurn = totalMonthOutflow / daysElapsed;
 
-    // Expanded Palette for Pie Slices
+    // Expanded High-Contrast Palette
     const extendedPalette = [
         '#0ea5e9', '#f43f5e', '#8b5cf6', '#f59e0b', '#10b981', 
         '#ec4899', '#06b6d4', '#84cc16', '#a855f7', '#64748b',
@@ -880,7 +903,6 @@ function renderHomeOverview() {
         '#d946ef', '#22c55e', '#f97316', '#2dd4bf', '#a3e635'
     ];
 
-    // Sorted arrays without .slice() truncation
     const sortedModes = Object.entries(modeAggregates).sort((a, b) => b[1] - a[1]);
     const modeLabels = sortedModes.map(i => i[0]);
     const modeValues = sortedModes.map(i => i[1]);
@@ -896,7 +918,27 @@ function renderHomeOverview() {
     const spentForValues = sortedSpentFor.map(i => i[1]);
     const spentForColors = spentForLabels.map((_, i) => extendedPalette[(i + 7) % extendedPalette.length]);
 
-    // 3 Pie/Donut Chart Container HTML
+    // Helper: Generate Interactive Right-Side Legend/List
+    const generateRightSideList = (labels, values, colors, chartRefName) => {
+        if (!labels.length) return `<div style="font-size:10px; color:var(--text-muted);">No transactions recorded</div>`;
+        return labels.map((label, idx) => {
+            const val = values[idx];
+            const pct = totalMonthOutflow > 0 ? ((val / totalMonthOutflow) * 100).toFixed(1) : 0;
+            return `
+                <div onclick="toggleSliceVisibility('${chartRefName}', ${idx}, this)" style="display:flex; justify-content:space-between; align-items:center; font-size:10px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,0.04); cursor:pointer; transition: opacity 0.2s;">
+                    <div style="display:flex; align-items:center; gap:6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:55%;">
+                        <span style="width:8px; height:8px; border-radius:2px; background:${colors[idx]}; flex-shrink:0;"></span>
+                        <span class="legend-label-text" style="color:var(--text); font-weight:600; overflow:hidden; text-overflow:ellipsis;">${label}</span>
+                    </div>
+                    <div style="font-family:'JetBrains Mono'; text-align:right;">
+                        <span style="color:var(--text); font-weight:700;">₹${val.toLocaleString('en-IN', {maximumFractionDigits: 0})}</span>
+                        <span style="color:var(--text-muted); font-size:8px;">(${pct}%)</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    };
+
     let html = `
     <div class="chart-dashboard">
         <!-- 4-TILE TELEMETRY GRID -->
@@ -925,27 +967,33 @@ function renderHomeOverview() {
         <div class="chart-card">
             <div class="chart-card-header">
                 <span class="chart-title">1. Payment Modes</span>
-                <!-- DYNAMIC THEME MONTH SELECTOR -->
-<div class="custom-select-wrapper" onclick="this.classList.toggle('open')">
-    <div class="custom-select-trigger">
-        📅 ${availableMonthsMap.get(activeOverviewMonthKey)?.label || 'Select Month'}
-    </div>
-    <div class="custom-options">
-        ${sortedMonthOptions.map(([key, opt]) => `
-            <div class="custom-option ${key === activeOverviewMonthKey ? 'selected' : ''}" 
-                 onclick="event.stopPropagation(); changeOverviewMonth('${key}'); this.closest('.custom-select-wrapper').classList.remove('open');">
-                📅 ${opt.label}
+                <div class="custom-select-wrapper" onclick="this.classList.toggle('open')">
+                    <div class="custom-select-trigger">
+                        📅 ${availableMonthsMap.get(activeOverviewMonthKey)?.label || 'Select Month'}
+                    </div>
+                    <div class="custom-options">
+                        ${sortedMonthOptions.map(([key, opt]) => `
+                            <div class="custom-option ${key === activeOverviewMonthKey ? 'selected' : ''}" 
+                                 onclick="event.stopPropagation(); changeOverviewMonth('${key}'); this.closest('.custom-select-wrapper').classList.remove('open');">
+                                📅 ${opt.label}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
             </div>
-        `).join('')}
-    </div>
-</div>
-
-            </div>
-            <div class="chart-wrapper-pie">
-                <canvas id="expenseDonutChart"></canvas>
-                <div class="chart-center-metric">
-                    <div class="chart-center-label">Total Out</div>
-                    <div class="chart-center-val">₹${totalMonthOutflow.toLocaleString('en-IN', {maximumFractionDigits: 0})}</div>
+            
+            <div style="display:flex; align-items:center; gap:12px; width:100%;">
+                <div style="width:130px; height:130px; flex-shrink:0; position:relative;">
+                    <canvas id="expenseDonutChart"></canvas>
+                </div>
+                <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;">
+                    <div id="expenseRightMetric" style="background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:8px; padding:6px 10px;">
+                        <div style="font-size:8px; font-weight:800; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase;">TOTAL AMOUNT</div>
+                        <div style="font-size:14px; font-weight:800; font-family:'JetBrains Mono'; color:var(--danger);">₹${totalMonthOutflow.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    </div>
+                    <div style="max-height:85px; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-right:2px;">
+                        ${generateRightSideList(modeLabels, modeValues, modeColors, 'expense')}
+                    </div>
                 </div>
             </div>
         </div>
@@ -958,11 +1006,19 @@ function renderHomeOverview() {
                     ${purposeLabels.length} Categories
                 </span>
             </div>
-            <div class="chart-wrapper-pie">
-                <canvas id="purposeDonutChart"></canvas>
-                <div class="chart-center-metric">
-                    <div class="chart-center-label">Categories</div>
-                    <div class="chart-center-val">${purposeLabels.length}</div>
+
+            <div style="display:flex; align-items:center; gap:12px; width:100%;">
+                <div style="width:130px; height:130px; flex-shrink:0; position:relative;">
+                    <canvas id="purposeDonutChart"></canvas>
+                </div>
+                <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;">
+                    <div id="purposeRightMetric" style="background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:8px; padding:6px 10px;">
+                        <div style="font-size:8px; font-weight:800; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase;">TOTAL AMOUNT</div>
+                        <div style="font-size:14px; font-weight:800; font-family:'JetBrains Mono'; color:var(--danger);">₹${totalMonthOutflow.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    </div>
+                    <div style="max-height:85px; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-right:2px;">
+                        ${generateRightSideList(purposeLabels, purposeValues, purposeColors, 'purpose')}
+                    </div>
                 </div>
             </div>
         </div>
@@ -975,11 +1031,19 @@ function renderHomeOverview() {
                     ${spentForLabels.length} Entities
                 </span>
             </div>
-            <div class="chart-wrapper-pie">
-                <canvas id="spentForDonutChart"></canvas>
-                <div class="chart-center-metric">
-                    <div class="chart-center-label">Entities</div>
-                    <div class="chart-center-val">${spentForLabels.length}</div>
+
+            <div style="display:flex; align-items:center; gap:12px; width:100%;">
+                <div style="width:130px; height:130px; flex-shrink:0; position:relative;">
+                    <canvas id="spentForDonutChart"></canvas>
+                </div>
+                <div style="flex:1; min-width:0; display:flex; flex-direction:column; gap:6px;">
+                    <div id="spentForRightMetric" style="background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:8px; padding:6px 10px;">
+                        <div style="font-size:8px; font-weight:800; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase;">TOTAL AMOUNT</div>
+                        <div style="font-size:14px; font-weight:800; font-family:'JetBrains Mono'; color:var(--danger);">₹${totalMonthOutflow.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                    </div>
+                    <div style="max-height:85px; overflow-y:auto; -webkit-overflow-scrolling:touch; padding-right:2px;">
+                        ${generateRightSideList(spentForLabels, spentForValues, spentForColors, 'spentFor')}
+                    </div>
                 </div>
             </div>
         </div>
@@ -987,31 +1051,35 @@ function renderHomeOverview() {
 
     document.getElementById('displayArea').innerHTML = html;
 
-    // Helper: Pie Chart Configuration
-    const createPieOptions = (showLegend = false) => ({
+    const createDoughnutOptions = (labels, values, total, metricDisplayId) => ({
         responsive: true,
         maintainAspectRatio: false,
+        layout: { padding: 0 },
         cutout: '62%',
-        plugins: {
-            legend: {
-                display: showLegend,
-                position: 'bottom',
-                labels: {
-                    color: '#94a3b8',
-                    font: { size: 10, family: 'Plus Jakarta Sans', weight: '700' },
-                    boxWidth: 10,
-                    padding: 8
-                }
-            },
-            tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        const val = context.raw || 0;
-                        const pct = totalMonthOutflow > 0 ? ((val / totalMonthOutflow) * 100).toFixed(1) : 0;
-                        return ` ₹${val.toLocaleString('en-IN', {minimumFractionDigits: 2})} (${pct}%)`;
-                    }
-                }
+        onClick: (event, elements) => {
+            const displayEl = document.getElementById(metricDisplayId);
+            if (!displayEl) return;
+
+            if (elements.length > 0) {
+                const index = elements[0].index;
+                const label = labels[index];
+                const value = values[index];
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                
+                displayEl.innerHTML = `
+                    <div style="font-size:8px; font-weight:800; color:var(--primary); letter-spacing:1px; text-transform:uppercase; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${label} (${percentage}%)</div>
+                    <div style="font-size:14px; font-weight:800; font-family:'JetBrains Mono'; color:var(--gold);">₹${value.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                `;
+            } else {
+                displayEl.innerHTML = `
+                    <div style="font-size:8px; font-weight:800; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase;">TOTAL AMOUNT</div>
+                    <div style="font-size:14px; font-weight:800; font-family:'JetBrains Mono'; color:var(--danger);">₹${total.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                `;
             }
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
         }
     });
 
@@ -1027,15 +1095,15 @@ function renderHomeOverview() {
                     data: modeValues.length ? modeValues : [1],
                     backgroundColor: modeValues.length ? modeColors : ['rgba(255,255,255,0.06)'],
                     borderColor: '#0f172a',
-                    borderWidth: 2,
-                    hoverOffset: 6
+                    borderWidth: 1.5,
+                    hoverOffset: 4
                 }]
             },
-            options: createPieOptions(true)
+            options: createDoughnutOptions(modeLabels, modeValues, totalMonthOutflow, 'expenseRightMetric')
         });
     }
 
-    // 2. Chart 2 (Purpose - All items)
+    // 2. Chart 2 (Purpose)
     const ctx2 = document.getElementById('purposeDonutChart');
     if (ctx2) {
         if (currentPurposeChart) currentPurposeChart.destroy();
@@ -1047,15 +1115,15 @@ function renderHomeOverview() {
                     data: purposeValues.length ? purposeValues : [1],
                     backgroundColor: purposeValues.length ? purposeColors : ['rgba(255,255,255,0.06)'],
                     borderColor: '#0f172a',
-                    borderWidth: 2,
-                    hoverOffset: 6
+                    borderWidth: 1.5,
+                    hoverOffset: 4
                 }]
             },
-            options: createPieOptions(false)
+            options: createDoughnutOptions(purposeLabels, purposeValues, totalMonthOutflow, 'purposeRightMetric')
         });
     }
 
-    // 3. Chart 3 (Spent For - All items)
+    // 3. Chart 3 (Spent For)
     const ctx3 = document.getElementById('spentForDonutChart');
     if (ctx3) {
         if (currentEntityChart) currentEntityChart.destroy();
@@ -1067,11 +1135,11 @@ function renderHomeOverview() {
                     data: spentForValues.length ? spentForValues : [1],
                     backgroundColor: spentForValues.length ? spentForColors : ['rgba(255,255,255,0.06)'],
                     borderColor: '#0f172a',
-                    borderWidth: 2,
-                    hoverOffset: 6
+                    borderWidth: 1.5,
+                    hoverOffset: 4
                 }]
             },
-            options: createPieOptions(false)
+            options: createDoughnutOptions(spentForLabels, spentForValues, totalMonthOutflow, 'spentForRightMetric')
         });
     }
 }
