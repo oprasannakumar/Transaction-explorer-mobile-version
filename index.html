@@ -14,7 +14,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root {
             --bg: #030712;
@@ -451,6 +451,92 @@
         }
         .card-grid .fin-panel:last-child { margin-bottom: 0; }
         .fin-panel { background: rgba(15,23,42,0.85); border-radius: 14px; padding: 15px 13px; border: 1px solid rgba(14,165,233,0.2); }
+ /* --- 3-PIE / DONUT DASHBOARD STYLING --- */
+.chart-dashboard {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-bottom: 24px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    flex: 1;
+}
+
+.chart-card {
+    background: var(--surface);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 14px;
+    position: relative;
+}
+
+.chart-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.chart-title {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+.chart-wrapper-pie {
+    position: relative;
+    width: 100%;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-center-metric {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+}
+
+.chart-center-label {
+    font-size: 8px;
+    color: var(--text-muted);
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.chart-center-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--danger);
+}
+
+.month-select-dropdown {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--primary);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 8px;
+    outline: none;
+    cursor: pointer;
+}
+
+.month-select-dropdown option {
+    background: #0f172a;
+    color: var(--text);
+}
+
     </style>
 </head>
 <body>
@@ -607,7 +693,314 @@ let globalRawRows = [];
 let activeFilters = {};
 let activeModalField = null;
 let globalDataCache = null;
-let activeVaultType = null; // Tracks 'Savings' or 'CC'
+let activeVaultType = null; 
+let currentExpenseChart = null;
+let currentPurposeChart = null;
+let currentEntityChart = null;
+let editingRowId = null;
+let activeOverviewMonthKey = null; // Format: "YYYY-MM" (e.g., "2026-08")
+
+function changeOverviewMonth(monthKey) {
+    activeOverviewMonthKey = monthKey;
+    renderHomeOverview();
+}
+
+function renderHomeOverview() {
+    if (!globalDataCache) return;
+
+    const monthlySheet = globalDataCache?.sheets?.["Monthly Transaction"];
+    if (!monthlySheet || !monthlySheet.rows) return;
+
+    const headers = monthlySheet.headers;
+    const rows = monthlySheet.rows;
+
+    // Resolve column indices
+    const dateIdx = headers.findIndex(h => /date/i.test(h));
+    const modeIdx = headers.findIndex(h => /transaction type|^type$|^mode$/i.test(h));
+    const purposeIdx = headers.findIndex(h => /^purpose$|purpose|reason|category/i.test(h));
+    const spentForIdx = headers.findIndex(h => /spent for|earned by|spent_for|party|beneficiary/i.test(h));
+    const withdrawnIdx = headers.findIndex(h => /withdrawn amount|withdrawn|debit amount|^debit$/i.test(h));
+    const depositIdx = headers.findIndex(h => /deposit amount|deposit|credit amount|^credit$/i.test(h));
+
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const now = new Date();
+    const currentActualYear = now.getFullYear();
+    const currentActualMonth = now.getMonth();
+
+    // Helper: Normalize names to Title Case to merge duplicates
+    const normalizeLabel = (str) => {
+        if (!str) return "";
+        return str.toString().trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+    };
+
+    // Gather available months from data
+    const availableMonthsMap = new Map();
+    rows.forEach(r => {
+        const rowTime = parseDateValue(r[dateIdx]);
+        if (rowTime) {
+            const d = new Date(rowTime);
+            const y = d.getFullYear();
+            const m = d.getMonth();
+            const key = `${y}-${String(m + 1).padStart(2, '0')}`;
+            if (!availableMonthsMap.has(key)) {
+                availableMonthsMap.set(key, { year: y, month: m, label: `${monthNames[m]} ${y}` });
+            }
+        }
+    });
+
+    const currentKey = `${currentActualYear}-${String(currentActualMonth + 1).padStart(2, '0')}`;
+    if (!availableMonthsMap.has(currentKey)) {
+        availableMonthsMap.set(currentKey, { year: currentActualYear, month: currentActualMonth, label: `${monthNames[currentActualMonth]} ${currentActualYear}` });
+    }
+
+    const sortedMonthOptions = Array.from(availableMonthsMap.entries()).sort((a, b) => b[0].localeCompare(a[0]));
+
+    if (!activeOverviewMonthKey || !availableMonthsMap.has(activeOverviewMonthKey)) {
+        activeOverviewMonthKey = availableMonthsMap.has(currentKey) ? currentKey : sortedMonthOptions[0][0];
+    }
+
+    const selectedTarget = availableMonthsMap.get(activeOverviewMonthKey);
+    const selYear = selectedTarget.year;
+    const selMonth = selectedTarget.month;
+
+    const isCurrentCalendarMonth = (selYear === currentActualYear && selMonth === currentActualMonth);
+    const daysInMonth = new Date(selYear, selMonth + 1, 0).getDate();
+    const daysElapsed = isCurrentCalendarMonth ? Math.max(1, now.getDate()) : daysInMonth;
+
+    let totalMonthOutflow = 0;
+    let totalMonthInflow = 0;
+    const modeAggregates = {};
+    const purposeAggregates = {};
+    const spentForAggregates = {};
+
+    // Aggregate filtered month data
+    rows.forEach(r => {
+        const rowTime = parseDateValue(r[dateIdx]);
+        if (rowTime) {
+            const d = new Date(rowTime);
+            if (d.getMonth() === selMonth && d.getFullYear() === selYear) {
+                const debit = parseFloat((r[withdrawnIdx] || "0").toString().replace(/[^0-9.-]/g, "")) || 0;
+                const credit = parseFloat((r[depositIdx] || "0").toString().replace(/[^0-9.-]/g, "")) || 0;
+
+                const rawMode = (modeIdx !== -1 && r[modeIdx]) ? String(r[modeIdx]).trim().toUpperCase() : "OTHER";
+                const mode = rawMode;
+                const purpose = (purposeIdx !== -1 && r[purposeIdx]) ? normalizeLabel(r[purposeIdx]) : "General";
+                const spentFor = (spentForIdx !== -1 && r[spentForIdx]) ? normalizeLabel(r[spentForIdx]) : "Self / Direct";
+
+                const isExcluded = mode.includes("SELF TRANSFER") || mode.includes("INTERNAL TRANSFER");
+
+                if (credit > 0 && !isExcluded) {
+                    totalMonthInflow += credit;
+                }
+
+                if (debit > 0 && !isExcluded) {
+                    totalMonthOutflow += debit;
+                    modeAggregates[mode] = (modeAggregates[mode] || 0) + debit;
+                    purposeAggregates[purpose] = (purposeAggregates[purpose] || 0) + debit;
+                    spentForAggregates[spentFor] = (spentForAggregates[spentFor] || 0) + debit;
+                }
+            }
+        }
+    });
+
+    const netCashflow = totalMonthInflow - totalMonthOutflow;
+    const dailyBurn = totalMonthOutflow / daysElapsed;
+
+    // Expanded Palette for Pie Slices
+    const extendedPalette = [
+        '#0ea5e9', '#f43f5e', '#8b5cf6', '#f59e0b', '#10b981', 
+        '#ec4899', '#06b6d4', '#84cc16', '#a855f7', '#64748b',
+        '#3b82f6', '#ef4444', '#14b8a6', '#eab308', '#6366f1',
+        '#d946ef', '#22c55e', '#f97316', '#2dd4bf', '#a3e635'
+    ];
+
+    // Sorted arrays without .slice() truncation
+    const sortedModes = Object.entries(modeAggregates).sort((a, b) => b[1] - a[1]);
+    const modeLabels = sortedModes.map(i => i[0]);
+    const modeValues = sortedModes.map(i => i[1]);
+    const modeColors = modeLabels.map((_, i) => extendedPalette[i % extendedPalette.length]);
+
+    const sortedPurposes = Object.entries(purposeAggregates).sort((a, b) => b[1] - a[1]);
+    const purposeLabels = sortedPurposes.map(i => i[0]);
+    const purposeValues = sortedPurposes.map(i => i[1]);
+    const purposeColors = purposeLabels.map((_, i) => extendedPalette[(i + 3) % extendedPalette.length]);
+
+    const sortedSpentFor = Object.entries(spentForAggregates).sort((a, b) => b[1] - a[1]);
+    const spentForLabels = sortedSpentFor.map(i => i[0]);
+    const spentForValues = sortedSpentFor.map(i => i[1]);
+    const spentForColors = spentForLabels.map((_, i) => extendedPalette[(i + 7) % extendedPalette.length]);
+
+    // 3 Pie/Donut Chart Container HTML
+    let html = `
+    <div class="chart-dashboard">
+        <!-- 4-TILE TELEMETRY GRID -->
+        <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:6px;">
+            <div class="stat-card" style="padding:10px 8px; text-align:center;">
+                <span class="label" style="justify-content:center; font-size:8px;">INFLOW</span>
+                <div class="value" style="color:var(--success); font-size:15px;">₹${totalMonthInflow.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            </div>
+            <div class="stat-card" style="padding:10px 8px; text-align:center;">
+                <span class="label" style="justify-content:center; font-size:8px;">OUTFLOW</span>
+                <div class="value" style="color:var(--danger); font-size:15px;">₹${totalMonthOutflow.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            </div>
+            <div class="stat-card" style="padding:10px 8px; text-align:center;">
+                <span class="label" style="justify-content:center; font-size:8px;">NET CASHFLOW</span>
+                <div class="value" style="color:${netCashflow >= 0 ? 'var(--primary)' : 'var(--danger)'}; font-size:15px;">
+                    ${netCashflow >= 0 ? '+' : ''}₹${netCashflow.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                </div>
+            </div>
+            <div class="stat-card" style="padding:10px 8px; text-align:center;">
+                <span class="label" style="justify-content:center; font-size:8px;">${isCurrentCalendarMonth ? 'DAILY BURN' : 'AVG DAILY SPEND'}</span>
+                <div class="value" style="color:var(--gold); font-size:15px;">₹${dailyBurn.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+            </div>
+        </div>
+
+        <!-- CHART 1: PAYMENT MODES -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <span class="chart-title">1. Payment Modes</span>
+                <select class="month-select-dropdown" onchange="changeOverviewMonth(this.value)">
+                    ${sortedMonthOptions.map(([key, opt]) => `
+                        <option value="${key}" ${key === activeOverviewMonthKey ? 'selected' : ''}>
+                            📅 ${opt.label}
+                        </option>
+                    `).join('')}
+                </select>
+            </div>
+            <div class="chart-wrapper-pie">
+                <canvas id="expenseDonutChart"></canvas>
+                <div class="chart-center-metric">
+                    <div class="chart-center-label">Total Out</div>
+                    <div class="chart-center-val">₹${totalMonthOutflow.toLocaleString('en-IN', {maximumFractionDigits: 0})}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART 2: PURPOSE -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <span class="chart-title">2. Outflow By Purpose</span>
+                <span style="font-family:'JetBrains Mono'; font-size:10px; color:var(--primary); font-weight:700;">
+                    ${purposeLabels.length} Categories
+                </span>
+            </div>
+            <div class="chart-wrapper-pie">
+                <canvas id="purposeDonutChart"></canvas>
+                <div class="chart-center-metric">
+                    <div class="chart-center-label">Categories</div>
+                    <div class="chart-center-val">${purposeLabels.length}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CHART 3: SPENT FOR / EARNED BY -->
+        <div class="chart-card">
+            <div class="chart-card-header">
+                <span class="chart-title">3. Spent For / Beneficiaries</span>
+                <span style="font-family:'JetBrains Mono'; font-size:10px; color:var(--primary); font-weight:700;">
+                    ${spentForLabels.length} Entities
+                </span>
+            </div>
+            <div class="chart-wrapper-pie">
+                <canvas id="spentForDonutChart"></canvas>
+                <div class="chart-center-metric">
+                    <div class="chart-center-label">Entities</div>
+                    <div class="chart-center-val">${spentForLabels.length}</div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    document.getElementById('displayArea').innerHTML = html;
+
+    // Helper: Pie Chart Configuration
+    const createPieOptions = (showLegend = false) => ({
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '62%',
+        plugins: {
+            legend: {
+                display: showLegend,
+                position: 'bottom',
+                labels: {
+                    color: '#94a3b8',
+                    font: { size: 10, family: 'Plus Jakarta Sans', weight: '700' },
+                    boxWidth: 10,
+                    padding: 8
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const val = context.raw || 0;
+                        const pct = totalMonthOutflow > 0 ? ((val / totalMonthOutflow) * 100).toFixed(1) : 0;
+                        return ` ₹${val.toLocaleString('en-IN', {minimumFractionDigits: 2})} (${pct}%)`;
+                    }
+                }
+            }
+        }
+    });
+
+    // 1. Chart 1 (Modes)
+    const ctx1 = document.getElementById('expenseDonutChart');
+    if (ctx1) {
+        if (currentExpenseChart) currentExpenseChart.destroy();
+        currentExpenseChart = new Chart(ctx1.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: modeLabels.length ? modeLabels : ['No Data'],
+                datasets: [{
+                    data: modeValues.length ? modeValues : [1],
+                    backgroundColor: modeValues.length ? modeColors : ['rgba(255,255,255,0.06)'],
+                    borderColor: '#0f172a',
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: createPieOptions(true)
+        });
+    }
+
+    // 2. Chart 2 (Purpose - All items)
+    const ctx2 = document.getElementById('purposeDonutChart');
+    if (ctx2) {
+        if (currentPurposeChart) currentPurposeChart.destroy();
+        currentPurposeChart = new Chart(ctx2.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: purposeLabels.length ? purposeLabels : ['No Data'],
+                datasets: [{
+                    data: purposeValues.length ? purposeValues : [1],
+                    backgroundColor: purposeValues.length ? purposeColors : ['rgba(255,255,255,0.06)'],
+                    borderColor: '#0f172a',
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: createPieOptions(false)
+        });
+    }
+
+    // 3. Chart 3 (Spent For - All items)
+    const ctx3 = document.getElementById('spentForDonutChart');
+    if (ctx3) {
+        if (currentEntityChart) currentEntityChart.destroy();
+        currentEntityChart = new Chart(ctx3.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: spentForLabels.length ? spentForLabels : ['No Data'],
+                datasets: [{
+                    data: spentForValues.length ? spentForValues : [1],
+                    backgroundColor: spentForValues.length ? spentForColors : ['rgba(255,255,255,0.06)'],
+                    borderColor: '#0f172a',
+                    borderWidth: 2,
+                    hoverOffset: 6
+                }]
+            },
+            options: createPieOptions(false)
+        });
+    }
+}
 
 function handleTableBack() {
     if (activeVaultType) {
@@ -682,7 +1075,7 @@ function returnToDashboard() {
     document.getElementById('status').innerText = "System Online // Authorized";
     selectedSheetName = "";
     document.getElementById("selectedSheetLabel").innerText = "📄 Select Module";
-    document.querySelectorAll(".sheet-option").forEach(opt => opt.classList.remove("active"));
+    document.querySelectorAll(".sheet-option").forEach(opt => opt.classList.remove("active"));renderHomeOverview();
 }
 
 
@@ -821,49 +1214,61 @@ async function initializeDashboard() {
     toggleDashboard(true);
     document.getElementById('table-toolbar-controls').style.display = 'none';
     document.getElementById('vault-toolbar-controls').style.display = 'none';
-    
-    const data = globalDataCache.dashboard;
-    const savingsData = globalDataCache.namedRanges.Savings;
 
-    const totalRow = savingsData.rows.find(r => String(r[0]).trim().toLowerCase() === "total");
+    const data = globalDataCache.dashboard || {};
+    const savingsData = globalDataCache.namedRanges?.Savings;
+
+    const totalRow = savingsData?.rows ? savingsData.rows.find(r => String(r[0]).trim().toLowerCase() === "total") : null;
     let totalOpening = totalRow ? (parseFloat(totalRow[1]) || 0) : 0;
     let totalCurrent = totalRow ? (parseFloat(totalRow[2]) || 0) : 0;
 
     const liquidityCard = document.querySelector(".dashboard .stat-card:nth-child(1)");
-    liquidityCard.innerHTML = `
-        <span class="label">LIQUIDITY</span>
-        <div class="value" style="color:var(--success);">₹${totalCurrent.toLocaleString('en-IN')}</div>
-        <div style="margin-top:6px; font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">OPENING: ₹${totalOpening.toLocaleString('en-IN')}</div>
-    `;
+    if (liquidityCard) {
+        liquidityCard.innerHTML = `
+            <span class="label">LIQUIDITY</span>
+            <div class="value" style="color:var(--success);">₹${totalCurrent.toLocaleString('en-IN')}</div>
+            <div style="margin-top:6px; font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">OPENING: ₹${totalOpening.toLocaleString('en-IN')}</div>
+        `;
+    }
 
     const creditCard = document.querySelector(".dashboard .stat-card:nth-child(2)");
-    creditCard.innerHTML = `
-        <span class="label">CREDIT LIMIT</span>
-        <div class="value" style="color:var(--gold);">₹${data.totalLimit.toLocaleString('en-IN')}</div>
-        <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:9px; font-family:'JetBrains Mono';">
-            <span style="color:var(--danger)">USED: ₹${data.debt.toLocaleString('en-IN')}</span>
-            <span style="color:var(--success)">AVL: ₹${data.availableLimit.toLocaleString('en-IN')}</span>
-        </div>
-    `;
+    if (creditCard) {
+        creditCard.innerHTML = `
+            <span class="label">CREDIT LIMIT</span>
+            <div class="value" style="color:var(--gold);">₹${(data.totalLimit || 0).toLocaleString('en-IN')}</div>
+            <div style="display:flex; justify-content:space-between; margin-top:6px; font-size:9px; font-family:'JetBrains Mono';">
+                <span style="color:var(--danger)">USED: ₹${(data.debt || 0).toLocaleString('en-IN')}</span>
+                <span style="color:var(--success)">AVL: ₹${(data.availableLimit || 0).toLocaleString('en-IN')}</span>
+            </div>
+        `;
+    }
 
-    const netPosition = totalCurrent - data.debt; 
+    const netPosition = totalCurrent - (data.debt || 0); 
     const netEl = document.getElementById('total-available');
-    netEl.innerText = '₹' + netPosition.toLocaleString('en-IN');
-    netEl.style.color = netPosition < 0 ? 'var(--danger)' : 'var(--primary)';
+    if (netEl) {
+        netEl.innerText = '₹' + netPosition.toLocaleString('en-IN');
+        netEl.style.color = netPosition < 0 ? 'var(--danger)' : 'var(--primary)';
+    }
 
-    document.getElementById('cash-total').innerText = '₹' + (data.cashBreakdown[10] || 0).toLocaleString('en-IN');
+    const cashBreakdown = data.cashBreakdown || {};
+    const cashTotal = document.getElementById('cash-total');
+    if (cashTotal) cashTotal.innerText = '₹' + (cashBreakdown[10] || 0).toLocaleString('en-IN');
 
     const denoms = [500, 50, 5, 200, 20, 2, 100, 10, 1];
     const sourceMap = { 500:1, 200:2, 100:3, 50:4, 20:5, 10:6, 5:7, 2:8, 1:9 };
-    
+
     let html = "";
     denoms.forEach((v) => {
-        const count = data.cashBreakdown[sourceMap[v]] || 0;
+        const count = cashBreakdown[sourceMap[v]] || 0;
         html += `<div class="denom-tile" data-v="${v}"><span class="denom-value">₹${v}</span><span class="denom-count">${count}</span></div>`;
     });
-    document.getElementById('cash-grid').innerHTML = html;
+    const cashGrid = document.getElementById('cash-grid');
+    if (cashGrid) cashGrid.innerHTML = html;
+
     document.getElementById('status').innerText = "System Online // Authorized";
+    renderHomeOverview();
 }
+
 
 async function startAuthSequence() {
     setProcessing(true, "REQUESTING ACCESS KEYS...");
@@ -1165,11 +1570,14 @@ async function filterLedgerByEntity(type, query) {
 
 async function fetchOpeningBalance(accountName) {
     if (!globalDataCache) return 0;
-    const openingsData = globalDataCache.namedRanges.ActualOpenings;
-    if (!openingsData) return 0;
-    const row = openingsData.rows.find(r => r[0] === accountName);
+    const openingsData = globalDataCache.namedRanges?.ActualOpenings;
+    if (!openingsData || !openingsData.rows) return 0;
+    const row = openingsData.rows.find(r => 
+        String(r[0]).trim().toLowerCase() === String(accountName).trim().toLowerCase()
+    );
     return row ? (parseFloat(row[1]) || 0) : 0; 
 }
+
 
 function injectRunningBalance(headers, rows, openingBalance) {
     const depositIdx = headers.findIndex(h => /deposit/i.test(h));
@@ -1587,7 +1995,7 @@ async function executeCommand(type) {
 document.addEventListener('touchstart', function(e) {
     const row = e.target.closest('.data-row');
     if (row) longPressTimer = setTimeout(() => showContextMenu(e, row), 550);
-}, {passive: true});
+}, {passive: false});
 
 document.addEventListener('touchend', () => clearTimeout(longPressTimer));
 document.addEventListener('touchmove', () => clearTimeout(longPressTimer));
