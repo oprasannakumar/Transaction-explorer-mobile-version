@@ -682,7 +682,7 @@ function returnToDashboard() {
     document.getElementById('status').innerText = "System Online // Authorized";
     selectedSheetName = "";
     document.getElementById("selectedSheetLabel").innerText = "📄 Select Module";
-    document.querySelectorAll(".sheet-option").forEach(opt => opt.classList.remove("active"));
+    document.querySelectorAll(".sheet-option").forEach(opt => opt.classList.remove("active"));renderDashboardSummary():
 }
 
 
@@ -862,7 +862,7 @@ async function initializeDashboard() {
         html += `<div class="denom-tile" data-v="${v}"><span class="denom-value">₹${v}</span><span class="denom-count">${count}</span></div>`;
     });
     document.getElementById('cash-grid').innerHTML = html;
-    document.getElementById('status').innerText = "System Online // Authorized";
+    document.getElementById('status').innerText = "System Online // Authorized";renderDashboardSummary():
 }
 
 async function startAuthSequence() {
@@ -1732,6 +1732,112 @@ function showLogoutScreen() {
             </button>
         </div>
     `;
+}
+function renderDashboardSummary() {
+    const area = document.getElementById('displayArea');
+    if (!globalDataCache || !area) return;
+
+    // Data parsing
+    const data = globalDataCache.dashboard || {};
+    const debt = data.debt || 0;
+    const totalLimit = data.totalLimit || 1;
+    const creditUtilPct = Math.min(100, Math.round((debt / totalLimit) * 100));
+
+    const savingsData = globalDataCache.namedRanges ? globalDataCache.namedRanges.Savings : null;
+    const totalRow = savingsData ? savingsData.rows.find(r => String(r[0]).trim().toLowerCase() === "total") : null;
+    const opening = totalRow ? (parseFloat(totalRow[1]) || 0) : 0;
+    const current = totalRow ? (parseFloat(totalRow[2]) || 0) : 0;
+    const netFlow = current - opening;
+    const isPositive = netFlow >= 0;
+
+    const modules = [
+        { name: "Full Statement", icon: "📑", color: "var(--primary)" },
+        { name: "Monthly Transaction", icon: "📅", color: "var(--success)" },
+        { name: "Loan", icon: "🏦", color: "var(--gold)" },
+        { name: "Credit", icon: "💳", color: "var(--danger)" },
+        { name: "Self Transfer", icon: "🔄", color: "var(--ledger)" },
+        { name: "Cash Entries", icon: "💵", color: "#38bdf8" }
+    ];
+
+    let html = `
+        <div style="display: flex; flex-direction: column; gap: 12px; padding: 4px 2px; height: 100%; overflow-y: auto;">
+            
+            <!-- SECTION 1: PORTFOLIO HEALTH -->
+            <div>
+                <div style="font-size: 9px; font-weight: 800; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+                    📊 Portfolio Health
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+                    <div class="fin-panel" style="border-left: 3px solid ${creditUtilPct > 50 ? 'var(--danger)' : 'var(--success)'}; padding: 10px;">
+                        <div style="font-size: 8px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">CREDIT UTILIZATION</div>
+                        <div style="font-size: 14px; font-weight: 800; font-family: 'JetBrains Mono'; color: ${creditUtilPct > 50 ? 'var(--danger)' : 'var(--success)'}; margin: 4px 0;">
+                            ${creditUtilPct}%
+                        </div>
+                        <div style="width: 100%; height: 3px; background: rgba(255,255,255,0.08); border-radius: 2px; overflow: hidden;">
+                            <div style="width: ${creditUtilPct}%; height: 100%; background: ${creditUtilPct > 50 ? 'var(--danger)' : 'var(--success)'};"></div>
+                        </div>
+                    </div>
+
+                    <div class="fin-panel" style="border-left: 3px solid ${isPositive ? 'var(--success)' : 'var(--danger)'}; padding: 10px;">
+                        <div style="font-size: 8px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">NET LIQUIDITY FLOW</div>
+                        <div style="font-size: 13px; font-weight: 800; font-family: 'JetBrains Mono'; color: ${isPositive ? 'var(--success)' : 'var(--danger)'}; margin-top: 4px;">
+                            ${isPositive ? '+' : ''}₹${Math.abs(netFlow).toLocaleString('en-IN', {maximumFractionDigits: 0})}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 2: MODULE SHORTCUTS -->
+            <div>
+                <div style="font-size: 9px; font-weight: 800; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+                    ⚡ Quick Access
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
+    `;
+
+    modules.forEach(m => {
+        html += `
+            <div class="fin-panel" style="display: flex; align-items: center; gap: 8px; padding: 10px; cursor: pointer; border-left: 3px solid ${m.color};" 
+                 onclick="selectSheet('${m.name}'); loadMain();">
+                <span style="font-size: 14px;">${m.icon}</span>
+                <span style="font-size: 10px; font-weight: 800; color: var(--text);">${m.name}</span>
+            </div>
+        `;
+    });
+
+    html += `
+                </div>
+            </div>
+
+            <!-- SECTION 3: ACCOUNTS BREAKDOWN -->
+            <div style="flex: 1;">
+                <div style="font-size: 9px; font-weight: 800; letter-spacing: 1.5px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+                    🏛 Account Balances
+                </div>
+                <div class="fin-panel" style="display: flex; flex-direction: column; gap: 6px; padding: 10px;">
+    `;
+
+    if (savingsData && savingsData.rows) {
+        savingsData.rows.forEach(r => {
+            const name = r[0];
+            if (String(name).trim().toLowerCase() === "total") return;
+            const bal = parseFloat(r[2]) || 0;
+            html += `
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 10px; padding: 2px 0;">
+                    <span style="color: var(--text); font-weight: 700;">${name}</span>
+                    <span style="font-family: 'JetBrains Mono'; font-weight: 800; color: var(--success);">₹${bal.toLocaleString('en-IN')}</span>
+                </div>
+            `;
+        });
+    }
+
+    html += `
+                </div>
+            </div>
+        </div>
+    `;
+
+    area.innerHTML = html;
 }
 
 function logout() {
