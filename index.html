@@ -455,7 +455,7 @@
 .chart-dashboard {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 20px;
     padding-bottom: 80px; 
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -2274,7 +2274,16 @@ function openEditModal(rowElement) {
     document.getElementById('edit-fields').innerHTML = fieldsHtml;
     document.getElementById('edit-modal').style.display = "flex";
 }
-
+document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+        // Short timeout ensures the DOM layout is fully resumed by the OS
+        setTimeout(() => {
+            if (typeof renderHomeOverview === "function" && globalDataCache) {
+                renderHomeOverview();
+            }
+        }, 150);
+    }
+});
 function closeEditModal() { document.getElementById('edit-modal').style.display = "none"; }
 
 async function saveEdit() {
