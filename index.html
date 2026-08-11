@@ -1355,44 +1355,61 @@ async function loadMain() {
     if (sessionStorage.getItem("finance_auth_v3") !== "true") return;
     if (!globalDataCache) return;
     activeVaultType = null;
+    
     const selectedSheet = selectedSheetName;
     const s = selectedStart;
     const e = selectedEnd;
 
-    if (selectedSheet !== "") {
-        setProcessing(true, `RENDERING ${selectedSheet.toUpperCase()}...`);
-        const sheetData = globalDataCache.sheets[selectedSheet];
-        if (!sheetData) {
-            setProcessing(false);
-            return alert("Sheet data not found.");
+    // 1. Validation check
+    if (selectedSheet === "" && (!s || !e)) {
+        return alert("Please select a Module or Date Range.");
+    }
+
+    try {
+        // CASE A: Specific Module Selected
+        if (selectedSheet !== "") {
+            setProcessing(true, `RENDERING ${selectedSheet.toUpperCase()}...`);
+            const sheetData = globalDataCache.sheets?.[selectedSheet];
+            if (!sheetData || !sheetData.headers) {
+                return alert(`Module "${selectedSheet}" not found.`);
+            }
+
+            currentTableMode = 'registry';
+            let rowsToRender = sheetData.rows || [];
+            if (s && e) {
+                rowsToRender = filterRowsLocallyByDate(sheetData.headers, sheetData.rows, s, e);
+            }
+
+            renderTable(sheetData.headers, rowsToRender);
+            updateToolbarMetrics(sheetData.headers, rowsToRender);
+            return;
         }
 
-        currentTableMode = 'registry';
-        let rowsToRender = sheetData.rows;
-        if (s && e) rowsToRender = filterRowsLocallyByDate(sheetData.headers, sheetData.rows, s, e);
+        // CASE B: No Module Selected -> Search Master "Full Statement"
+        setProcessing(true, "COMPILING STATEMENT...");
+        const masterSheet = globalDataCache.sheets?.["Full Statement"] || globalDataCache.sheets?.["Monthly Transaction"];
+        if (!masterSheet || !masterSheet.headers) {
+            return alert("Statement data not available.");
+        }
 
-        renderTable(sheetData.headers, rowsToRender);
+        currentTableMode = 'statement';
+        let rowsToRender = masterSheet.rows || [];
+        if (s && e) {
+            rowsToRender = filterRowsLocallyByDate(masterSheet.headers, masterSheet.rows, s, e);
+        }
+
+        renderTable(masterSheet.headers, rowsToRender);
+        updateToolbarMetrics(masterSheet.headers, rowsToRender);
+
+    } catch (err) {
+        console.error("Search compile error:", err);
+        alert("Failed to render transactions.");
+    } finally {
+        // Always dismiss loading overlay, even if an error occurs
         setProcessing(false);
-        return;
     }
-
-    if (!s || !e) return alert("Select a Sheet or Date Range.");
-    
-    setProcessing(true, "COMPILING LEDGER...");
-    let aggregatedRows = [];
-    let ledgerHeaders = [];
-    
-    for (const [sheetName, data] of Object.entries(globalDataCache.sheets)) {
-        if (ledgerHeaders.length === 0) ledgerHeaders = data.headers; 
-        const filtered = filterRowsLocallyByDate(data.headers, data.rows, s, e);
-        aggregatedRows = aggregatedRows.concat(filtered);
-    }
-
-    currentTableMode = 'statement';
-    renderTable(ledgerHeaders, aggregatedRows);
-    updateToolbarMetrics(ledgerHeaders, aggregatedRows);
-    setProcessing(false);
 }
+
 
 /* VAULT VIEW WITH CONTROLS ATTACHED TO STICKY TOOLBAR */
 async function viewNamedRange(rangeName) {
