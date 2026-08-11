@@ -458,10 +458,10 @@
     gap: 20px;
     padding-bottom: 70px; 
     overflow-y: auto;
+    overflow-x: visible;
     -webkit-overflow-scrolling: touch;
     flex: 1;
 }
-
 
 .chart-card {
     background: var(--surface);
@@ -471,6 +471,7 @@
     padding: 14px;
     position: relative;
     margin-bottom:4px;
+    overflow:visible;
 }
 
 .chart-card-header {
@@ -579,7 +580,7 @@
     flex-direction: column;
     gap: 4px;
     padding: 6px;
-    z-index: 1000;
+    z-index: 99999;
     min-width: 130px;
     max-height: 200px;
     overflow-y: auto;
