@@ -446,7 +446,7 @@
         .card-grid { 
             display: flex; 
             flex-direction: column; 
-              gap: 16px; 
+            gap: 16px; 
             padding: 16px 2px calc(env(safe-area-inset-bottom) + 40px) 2px; 
         }
         .card-grid .fin-panel:last-child { margin-bottom: 0; }
@@ -485,7 +485,7 @@
 
         <div class="toolbar">
             <!-- ROW 1: MODULE SELECTOR & LOGOUT -->
-            <div class="toolbar-row">
+            <div class="toolbar-row" id="toolbar-row-1">
                 <div class="sheet-selector" id="sheetSelector">
                     <div class="sheet-selector-trigger" onclick="toggleSheetDropdown(event)">
                         <span id="selectedSheetLabel">📄 Select Module</span>
@@ -502,11 +502,21 @@
             </div>
 
             <!-- ROW 2: FLATPICKR, SEARCH & SYNC -->
-            <div class="toolbar-row">
+            <div class="toolbar-row" id="toolbar-row-2">
                 <input type="text" id="dateRange" class="range-input" placeholder="📅 Date Range" readonly style="flex: 1.4; min-width: 0;">
                 <button class="btn-future" onclick="loadMain()" style="flex: 0.8; height: 42px;">Search</button>
                 <button class="btn-future" onclick="syncAllData(true)" style="border-color: var(--success); color: var(--success); flex: 0.8; height: 42px;">
                     🔄 Sync
+                </button>
+            </div>
+
+            <!-- TRACE MODE TOOLBAR CONTROLS (ONLY BACK & LOGOUT) -->
+            <div id="trace-toolbar-controls" style="display: none; justify-content: space-between; align-items: center; width: 100%; gap: 8px;">
+                <button class="btn-future" onclick="exitTraceMode()" style="height: 42px; padding: 0 16px; border-color: var(--primary); flex: 1;">
+                    ← Back
+                </button>
+                <button class="btn-future-danger" onclick="logout()" style="height: 42px; padding: 0 16px; border-radius: 12px; flex: 0.6;">
+                    🔐 Logout
                 </button>
             </div>
 
@@ -542,7 +552,8 @@
             </div>
         </div>
 
-<div id="displayArea"></div>
+        <div id="displayArea"></div>
+    </div>
 
     <div id="global-filter-modal" class="filter-modal-backdrop" onclick="closeFilterModal(event)">
         <div class="filter-modal-content" onclick="event.stopPropagation()">
@@ -643,8 +654,11 @@ function resetDashboardToZero() {
 
 function returnToDashboard() {
     toggleDashboard(true);
+    document.getElementById('toolbar-row-1').style.display = 'flex';
+    document.getElementById('toolbar-row-2').style.display = 'flex';
     document.getElementById('table-toolbar-controls').style.display = 'none';
     document.getElementById('vault-toolbar-controls').style.display = 'none';
+    document.getElementById('trace-toolbar-controls').style.display = 'none';
     clearDisplayArea();
     document.getElementById('status').innerText = "System Online // Authorized";
     selectedSheetName = "";
@@ -652,11 +666,18 @@ function returnToDashboard() {
     document.querySelectorAll(".sheet-option").forEach(opt => opt.classList.remove("active"));
 }
 
+function exitTraceMode() {
+    if (globalRawHeaders && globalRawHeaders.length > 0 && globalRawRows && globalRawRows.length > 0) {
+        renderTable(globalRawHeaders, globalRawRows);
+    } else {
+        returnToDashboard();
+    }
+}
+
 function clearDisplayArea() {
     const area = document.getElementById('displayArea');
     area.innerHTML = '';
 }
-
 
 function normalizeValue(val) {
     return (val ?? "").toString().toLowerCase().replace(/[₹,\s]/g, '').split('.')[0].trim();
@@ -742,7 +763,6 @@ async function syncAllData(forceRefresh = false) {
     }
 }
 
-
 function filterRowsLocallyByDate(headers, rows, startStr, endStr) {
     if (!startStr) return rows;
     const dateIndex = headers.findIndex(h => /date/i.test(h));
@@ -759,7 +779,6 @@ function filterRowsLocallyByDate(headers, rows, startStr, endStr) {
 }
 
 window.onload = async () => {
-    // Clean up temporary reload URL params if present
     if (window.location.search.includes('_v=')) {
         const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
@@ -785,8 +804,11 @@ window.onload = async () => {
 async function initializeDashboard() {
     if (!globalDataCache) return;
     toggleDashboard(true);
+    document.getElementById('toolbar-row-1').style.display = 'flex';
+    document.getElementById('toolbar-row-2').style.display = 'flex';
     document.getElementById('table-toolbar-controls').style.display = 'none';
     document.getElementById('vault-toolbar-controls').style.display = 'none';
+    document.getElementById('trace-toolbar-controls').style.display = 'none';
     
     const data = globalDataCache.dashboard;
     const savingsData = globalDataCache.namedRanges.Savings;
@@ -955,13 +977,15 @@ async function loadMain() {
     setProcessing(false);
 }
 
-/* VAULT VIEW WITH CONTROLS ATTACHED TO STICKY TOOLBAR */
 async function viewNamedRange(rangeName) {
     if (sessionStorage.getItem("finance_auth_v3") !== "true") return;
     if (!globalDataCache) return;
 
     toggleDashboard(false);
+    document.getElementById('toolbar-row-1').style.display = 'flex';
+    document.getElementById('toolbar-row-2').style.display = 'flex';
     document.getElementById('table-toolbar-controls').style.display = 'none';
+    document.getElementById('trace-toolbar-controls').style.display = 'none';
     
     const vaultToolbar = document.getElementById('vault-toolbar-controls');
     document.getElementById('vault-toolbar-title').innerText = rangeName === 'Savings' ? 'SAVINGS VAULT' : 'CREDIT VAULT';
@@ -1065,7 +1089,6 @@ async function viewNamedRange(rangeName) {
     }
 }
 
-/* ACCOUNT SELECTION WITH DATE FILTER INTEGRATION */
 async function filterLedgerByEntity(type, query) {
     if (!globalDataCache) return;
     currentTableMode = 'statement';
@@ -1216,7 +1239,10 @@ function formatINR(value) {
 
 function renderTable(headers, rows) {
     toggleDashboard(false);
+    document.getElementById('toolbar-row-1').style.display = 'flex';
+    document.getElementById('toolbar-row-2').style.display = 'flex';
     document.getElementById('vault-toolbar-controls').style.display = 'none';
+    document.getElementById('trace-toolbar-controls').style.display = 'none';
     document.getElementById('table-toolbar-controls').style.display = 'flex';
     document.getElementById('tableFilter').value = "";
     
@@ -1435,11 +1461,19 @@ function recalculateMetricsFromSelected() {
     document.getElementById('bar-outflow').innerText = formatINR(totalOutflow);
 }
 
+/* TRACE MODE: Hides dashboards and toolbars entirely, keeping only Back and Logout */
 async function fetchAssociated() {
     if (!globalDataCache) return;
-    toggleDashboard(false);
     const ids = Array.from(document.querySelectorAll('.data-row.selected')).map(r => r.getAttribute('data-id'));
     if (!ids.length) return;
+
+    toggleDashboard(false);
+    document.getElementById('toolbar-row-1').style.display = 'none';
+    document.getElementById('toolbar-row-2').style.display = 'none';
+    document.getElementById('table-toolbar-controls').style.display = 'none';
+    document.getElementById('vault-toolbar-controls').style.display = 'none';
+    document.getElementById('trace-toolbar-controls').style.display = 'flex';
+
     setProcessing(true, "TRACING SYSTEM REFERENCES...");
 
     try {
@@ -1452,11 +1486,11 @@ async function fetchAssociated() {
         }
 
         let finalHtml = `
-            <div style="margin-bottom:14px; display:flex; justify-content:space-between; align-items:center;">
-                <button class="btn-future" onclick="loadMain()" style="flex:none; height:36px; padding:0 12px;">
-                    ← EXIT TRACE
-                </button>
-                <div class="metric-pill">
+            <div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+                <div style="font-size:11px; font-weight:800; color:var(--primary); font-family:'JetBrains Mono';">
+                    TRACE SEQUENCE ACTIVE
+                </div>
+                <div class="metric-pill" style="padding:4px 10px;">
                     <span class="pill-label">TARGETS</span>
                     <span class="pill-val" style="color:var(--primary); font-size:10px;">${ids.join(', ')}</span>
                 </div>
@@ -1556,14 +1590,10 @@ document.addEventListener('touchstart', function(e) {
 document.addEventListener('touchend', () => clearTimeout(longPressTimer));
 document.addEventListener('touchmove', () => clearTimeout(longPressTimer));
 
-/* DEEP CACHE PURGE & FORCE DEPLOYMENT RELOAD */
 async function forceAppReload() {
     setProcessing(true, "PURGING CACHE & RELOADING...");
-    
-    // 1. Clear LocalStorage JSON Cache
     localStorage.removeItem("finance_data_cache_v3");
 
-    // 2. Clear all PWA Cache Storage
     if ('caches' in window) {
         try {
             const keys = await caches.keys();
@@ -1571,7 +1601,6 @@ async function forceAppReload() {
         } catch(e) { console.warn("Cache API clear failed:", e); }
     }
 
-    // 3. Unregister active Service Workers
     if ('serviceWorker' in navigator) {
         try {
             const registrations = await navigator.serviceWorker.getRegistrations();
@@ -1581,13 +1610,10 @@ async function forceAppReload() {
         } catch(e) { console.warn("ServiceWorker unregister failed:", e); }
     }
 
-    // 4. Force hard reload with timestamp parameter
     const currentUrl = new URL(window.location.href);
     currentUrl.searchParams.set('_v', Date.now());
     window.location.href = currentUrl.toString();
 }
-
-
 
 async function copyRowToClipboard(rowElement) {
     const table = document.getElementById('mainDataTable');
@@ -1682,8 +1708,11 @@ async function saveEdit() {
 function showLogoutScreen() {
     toggleDashboard(true);
     resetDashboardToZero();
+    document.getElementById('toolbar-row-1').style.display = 'flex';
+    document.getElementById('toolbar-row-2').style.display = 'flex';
     document.getElementById('table-toolbar-controls').style.display = 'none';
     document.getElementById('vault-toolbar-controls').style.display = 'none';
+    document.getElementById('trace-toolbar-controls').style.display = 'none';
     document.getElementById('status').innerText = "System Locked // Awaiting Auth";
     clearDisplayArea();
     document.getElementById('displayArea').innerHTML += `
