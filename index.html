@@ -536,6 +536,72 @@
     background: #0f172a;
     color: var(--text);
 }
+/* --- CUSTOM THEME MONTH SELECTOR --- */
+.custom-select-wrapper {
+    position: relative;
+    display: inline-block;
+    user-select: none;
+}
+
+.custom-select-trigger {
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid var(--primary);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 0 10px rgba(14, 165, 233, 0.15);
+}
+
+.custom-select-trigger::after {
+    content: "▼";
+    font-size: 8px;
+    color: var(--primary);
+}
+
+.custom-options {
+    position: absolute;
+    top: 115%;
+    right: 0;
+    background: #0f172a;
+    border: 1px solid var(--primary);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px;
+    z-index: 1000;
+    min-width: 130px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.custom-select-wrapper.open .custom-options {
+    display: flex;
+}
+
+.custom-option {
+    padding: 8px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.custom-option:hover, .custom-option.selected {
+    background: rgba(14, 165, 233, 0.2);
+    color: var(--primary);
+    font-weight: 700;
+}
 
     </style>
 </head>
@@ -859,13 +925,21 @@ function renderHomeOverview() {
         <div class="chart-card">
             <div class="chart-card-header">
                 <span class="chart-title">1. Payment Modes</span>
-                <select class="month-select-dropdown" onchange="changeOverviewMonth(this.value)">
-                    ${sortedMonthOptions.map(([key, opt]) => `
-                        <option value="${key}" ${key === activeOverviewMonthKey ? 'selected' : ''}>
-                            📅 ${opt.label}
-                        </option>
-                    `).join('')}
-                </select>
+                <!-- DYNAMIC THEME MONTH SELECTOR -->
+<div class="custom-select-wrapper" onclick="this.classList.toggle('open')">
+    <div class="custom-select-trigger">
+        📅 ${availableMonthsMap.get(activeOverviewMonthKey)?.label || 'Select Month'}
+    </div>
+    <div class="custom-options">
+        ${sortedMonthOptions.map(([key, opt]) => `
+            <div class="custom-option ${key === activeOverviewMonthKey ? 'selected' : ''}" 
+                 onclick="event.stopPropagation(); changeOverviewMonth('${key}'); this.closest('.custom-select-wrapper').classList.remove('open');">
+                📅 ${opt.label}
+            </div>
+        `).join('')}
+    </div>
+</div>
+
             </div>
             <div class="chart-wrapper-pie">
                 <canvas id="expenseDonutChart"></canvas>
@@ -2008,6 +2082,11 @@ async function executeCommand(type) {
     else if (type === 'trace') fetchAssociated();
     else if (type === 'purge') deleteRecords();
 }
+window.addEventListener('click', (e) => {
+    if (!e.target.closest('.custom-select-wrapper')) {
+        document.querySelectorAll('.custom-select-wrapper').forEach(el => el.classList.remove('open'));
+    }
+});
 
 document.addEventListener('touchstart', function(e) {
     const row = e.target.closest('.data-row');
