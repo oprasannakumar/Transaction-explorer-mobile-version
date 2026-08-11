@@ -523,11 +523,11 @@
             <!-- TABLE SEARCH BAR & METRICS (FIXED INSIDE TOOLBAR) -->
             <div id="table-toolbar-controls" style="display: none; flex-direction: column; gap: 8px; width: 100%; border-top: 1px solid var(--border); padding-top: 8px;">
                 <div class="search-row">
-                    <button class="btn-future" onclick="returnToDashboard()" style="height:38px; flex:none; padding:0 10px; border-color:var(--primary);">
+                    <button class="btn-future" onclick="handleTableBack()" style="height:38px; flex:none; padding:0 10px; border-color:var(--primary);">
                         ← Dash
                     </button>
                     <input type="text" id="tableFilter" placeholder="Search transactions..." onkeyup="applyFilters()">
-                    <button class="btn-future-danger" style="height:38px; width:55px; padding:0;" onclick="resetAllFilters()">RESET</button>
+                    <button class="btn-future-danger" style="height:38px; width:55px; padding:0;" onclick="exitTraceView()">RESET</button>
                 </div>
                 <div class="metrics-bar">
                     <div class="metric-pill">
@@ -607,6 +607,26 @@ let globalRawRows = [];
 let activeFilters = {};
 let activeModalField = null;
 let globalDataCache = null;
+let activeVaultType = null; // Tracks 'Savings' or 'CC'
+
+function handleTableBack() {
+    if (activeVaultType) {
+        viewNamedRange(activeVaultType);
+    } else {
+        returnToDashboard(); 
+    }
+}
+
+function exitTraceView() {
+    document.getElementById('trace-toolbar-controls').style.display = 'none';
+    if (globalRawHeaders.length > 0 && globalRawRows.length > 0) {
+        renderTable(globalRawHeaders, globalRawRows); // Restores the previous table view
+    } else if (activeVaultType) {
+        viewNamedRange(activeVaultType);
+    } else {
+        returnToDashboard();
+    }
+}
 
 function toggleDashboard(show) {
     const dash = document.querySelector('.dashboard');
@@ -652,6 +672,7 @@ function resetDashboardToZero() {
 }
 
 function returnToDashboard() {
+    activeVaultType = null;
     toggleDashboard(true);
     document.querySelectorAll('.toolbar-row').forEach(row => row.style.display = 'flex');
     document.getElementById('trace-toolbar-controls').style.display = 'none';
@@ -928,7 +949,7 @@ function selectSheet(name, el) {
 async function loadMain() {
     if (sessionStorage.getItem("finance_auth_v3") !== "true") return;
     if (!globalDataCache) return;
-
+    activeVaultType = null;
     const selectedSheet = selectedSheetName;
     const s = selectedStart;
     const e = selectedEnd;
@@ -972,7 +993,7 @@ async function loadMain() {
 async function viewNamedRange(rangeName) {
     if (sessionStorage.getItem("finance_auth_v3") !== "true") return;
     if (!globalDataCache) return;
-
+    activeVaultType = rangeName;
     toggleDashboard(false);
     document.getElementById('table-toolbar-controls').style.display = 'none';
     
