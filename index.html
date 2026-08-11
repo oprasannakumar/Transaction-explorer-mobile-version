@@ -943,27 +943,34 @@ function renderHomeOverview() {
 
     let html = `
     <div class="chart-dashboard">
-        <!-- 4-TILE TELEMETRY GRID -->
-           <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:10px;">
-            <div class="stat-card" style="padding:14px; text-align:center;">
-                <span class="label" style="justify-content:center; font-size:9px;">INFLOW</span>
-                <div class="value" style="color:var(--success); font-size:18px;">₹${totalMonthInflow.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+        <!-- 4-TILE TELEMETRY GRID MATCHING CHART CARDS -->
+        <div class="chart-card" style="padding: 14px;">
+            <div class="chart-card-header" style="margin-bottom: 10px;">
+                <span class="chart-title">Monthly Telemetry</span>
+                <span style="font-family:'JetBrains Mono'; font-size:10px; color:var(--primary); font-weight:700;">Live Summary</span>
             </div>
-            <div class="stat-card" style="padding:14px; text-align:center;">
-                <span class="label" style="justify-content:center; font-size:9px;">OUTFLOW</span>
-                <div class="value" style="color:var(--danger); font-size:18px;">₹${totalMonthOutflow.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-            </div>
-            <div class="stat-card" style="padding:14px; text-align:center;">
-                <span class="label" style="justify-content:center; font-size:9px;">NET CASHFLOW</span>
-                <div class="value" style="color:${netCashflow >= 0 ? 'var(--primary)' : 'var(--danger)'}; font-size:18px;">
-                    ${netCashflow >= 0 ? '+' : ''}₹${netCashflow.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+            <div style="display:grid; grid-template-columns:repeat(2, 1fr); gap:8px;">
+                <div style="background: rgba(0,0,0,0.35); border:1px solid var(--border); border-radius:12px; padding:10px; text-align:center;">
+                    <span class="label" style="justify-content:center; font-size:8px;">INFLOW</span>
+                    <div class="value" style="color:var(--success); font-size:15px;">₹${totalMonthInflow.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.35); border:1px solid var(--border); border-radius:12px; padding:10px; text-align:center;">
+                    <span class="label" style="justify-content:center; font-size:8px;">OUTFLOW</span>
+                    <div class="value" style="color:var(--danger); font-size:15px;">₹${totalMonthOutflow.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                </div>
+                <div style="background: rgba(0,0,0,0.35); border:1px solid var(--border); border-radius:12px; padding:10px; text-align:center;">
+                    <span class="label" style="justify-content:center; font-size:8px;">NET CASHFLOW</span>
+                    <div class="value" style="color:${netCashflow >= 0 ? 'var(--primary)' : 'var(--danger)'}; font-size:15px;">
+                        ${netCashflow >= 0 ? '+' : ''}₹${netCashflow.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                    </div>
+                </div>
+                <div style="background: rgba(0,0,0,0.35); border:1px solid var(--border); border-radius:12px; padding:10px; text-align:center;">
+                    <span class="label" style="justify-content:center; font-size:8px;">${isCurrentCalendarMonth ? 'DAILY BURN' : 'AVG DAILY SPEND'}</span>
+                    <div class="value" style="color:var(--gold); font-size:15px;">₹${dailyBurn.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
                 </div>
             </div>
-            <div class="stat-card" style="padding:14px; text-align:center;">
-                <span class="label" style="justify-content:center; font-size:9px;">${isCurrentCalendarMonth ? 'DAILY BURN' : 'AVG DAILY SPEND'}</span>
-                <div class="value" style="color:var(--gold); font-size:18px;">₹${dailyBurn.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-            </div>
         </div>
+
         <!-- CHART 1: PAYMENT MODES -->
         <div class="chart-card">
             <div class="chart-card-header">
