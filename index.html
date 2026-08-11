@@ -444,8 +444,8 @@
         @keyframes spin { to { transform: rotate(360deg); } }
 
         .card-grid { 
-            display: flex; 
-            flex-direction: column; 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr);
               gap: 16px; 
             padding: 16px 2px calc(env(safe-area-inset-bottom) + 40px) 2px; 
         }
