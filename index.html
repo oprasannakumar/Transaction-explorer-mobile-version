@@ -445,6 +445,7 @@
 
         .card-grid { 
             display: flex; 
+            flex:2;
             flex-direction: column; 
               gap: 16px; 
             padding: 16px 2px calc(env(safe-area-inset-bottom) + 40px) 2px; 
@@ -2277,14 +2278,18 @@ function openEditModal(rowElement) {
 }
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
-        // Short timeout ensures the DOM layout is fully resumed by the OS
         setTimeout(() => {
-            if (typeof renderHomeOverview === "function" && globalDataCache) {
+            // Only re-render the home overview if the chart dashboard/display area is currently active
+            const displayArea = document.getElementById('displayArea');
+            const isDashboardActive = displayArea && displayArea.querySelector('.chart-dashboard');
+            
+            if (isDashboardActive && typeof renderHomeOverview === "function" && globalDataCache) {
                 renderHomeOverview();
             }
         }, 150);
     }
 });
+
 function closeEditModal() { document.getElementById('edit-modal').style.display = "none"; }
 
 async function saveEdit() {
