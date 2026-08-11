@@ -1461,7 +1461,7 @@ function recalculateMetricsFromSelected() {
     document.getElementById('bar-outflow').innerText = formatINR(totalOutflow);
 }
 
-/* TRACE MODE: Hides dashboards and toolbars entirely, keeping only Back and Logout */
+/* TRACE MODE: Dashboards and toolbar modules removed; target headers stripped out */
 async function fetchAssociated() {
     if (!globalDataCache) return;
     const ids = Array.from(document.querySelectorAll('.data-row.selected')).map(r => r.getAttribute('data-id'));
@@ -1485,17 +1485,7 @@ async function fetchAssociated() {
             }
         }
 
-        let finalHtml = `
-            <div style="margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-                <div style="font-size:11px; font-weight:800; color:var(--primary); font-family:'JetBrains Mono';">
-                    TRACE SEQUENCE ACTIVE
-                </div>
-                <div class="metric-pill" style="padding:4px 10px;">
-                    <span class="pill-label">TARGETS</span>
-                    <span class="pill-val" style="color:var(--primary); font-size:10px;">${ids.join(', ')}</span>
-                </div>
-            </div>`;
-        
+        let finalHtml = ``;
         let foundAnyData = false;
 
         for (const sheetName in grouped) {
