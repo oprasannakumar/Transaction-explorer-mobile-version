@@ -682,7 +682,7 @@ function returnToDashboard() {
     document.getElementById('status').innerText = "System Online // Authorized";
     selectedSheetName = "";
     document.getElementById("selectedSheetLabel").innerText = "📄 Select Module";
-    document.querySelectorAll(".sheet-option").forEach(opt => opt.classList.remove("active"));renderDashboardSummary():
+    document.querySelectorAll(".sheet-option").forEach(opt => opt.classList.remove("active"));renderDashboardSummary();
 }
 
 
@@ -862,7 +862,7 @@ async function initializeDashboard() {
         html += `<div class="denom-tile" data-v="${v}"><span class="denom-value">₹${v}</span><span class="denom-count">${count}</span></div>`;
     });
     document.getElementById('cash-grid').innerHTML = html;
-    document.getElementById('status').innerText = "System Online // Authorized";renderDashboardSummary():
+    document.getElementById('status').innerText = "System Online // Authorized";renderDashboardSummary();
 }
 
 async function startAuthSequence() {
