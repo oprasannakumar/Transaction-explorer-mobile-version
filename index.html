@@ -452,161 +452,109 @@
         }
         .card-grid .fin-panel:last-child { margin-bottom: 0; }
         .fin-panel { background: rgba(15,23,42,0.85); border-radius: 14px; padding: 15px 13px; border: 1px solid rgba(14,165,233,0.2); }
- /* --- 3-PIE / DONUT DASHBOARD STYLING --- */
-.chart-dashboard {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding-bottom: 70px; 
-    overflow-y: auto;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    flex: 1;
-}
+        
+        .chart-dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-bottom: 70px; 
+            overflow-y: auto;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            flex: 1;
+        }
 
-.chart-card {
-    background: var(--surface);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 14px;
-    position: relative;
-    margin-bottom:4px;
-    overflow:visible;
-}
+        .chart-card {
+            background: var(--surface);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px;
+            position: relative;
+            margin-bottom:4px;
+            overflow:visible;
+        }
 
-.chart-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
+        .chart-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
 
-.chart-title {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 1.5px;
-    color: var(--text-muted);
-    text-transform: uppercase;
-}
+        .chart-title {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
 
-.chart-wrapper-pie {
-    position: relative;
-    width: 100%;
-    height: 180px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
+        .custom-select-wrapper {
+            position: relative;
+            display: inline-block;
+            user-select: none;
+        }
 
-.chart-center-metric {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    pointer-events: none;
-}
+        .custom-select-trigger {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--primary);
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.15);
+        }
 
-.chart-center-label {
-    font-size: 8px;
-    color: var(--text-muted);
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
+        .custom-select-trigger::after {
+            content: "▼";
+            font-size: 8px;
+            color: var(--primary);
+        }
 
-.chart-center-val {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 800;
-    color: var(--danger);
-}
+        .custom-options {
+            position: absolute;
+            top: 115%;
+            right: 0;
+            background: #0f172a;
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            padding: 6px;
+            z-index: 99999;
+            min-width: 130px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
 
-.month-select-dropdown {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid var(--primary);
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 4px 8px;
-    border-radius: 8px;
-    outline: none;
-    cursor: pointer;
-}
+        .custom-select-wrapper.open .custom-options {
+            display: flex;
+        }
 
-.month-select-dropdown option {
-    background: #0f172a;
-    color: var(--text);
-}
-/* --- CUSTOM THEME MONTH SELECTOR --- */
-.custom-select-wrapper {
-    position: relative;
-    display: inline-block;
-    user-select: none;
-}
+        .custom-option {
+            padding: 8px 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            color: var(--text-muted);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
 
-.custom-select-trigger {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid var(--primary);
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 0 10px rgba(14, 165, 233, 0.15);
-}
-
-.custom-select-trigger::after {
-    content: "▼";
-    font-size: 8px;
-    color: var(--primary);
-}
-
-.custom-options {
-    position: absolute;
-    top: 115%;
-    right: 0;
-    background: #0f172a;
-    border: 1px solid var(--primary);
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-    display: none;
-    flex-direction: column;
-    gap: 4px;
-    padding: 6px;
-    z-index: 99999;
-    min-width: 130px;
-    max-height: 150px;
-    overflow-y: auto;
-}
-
-.custom-select-wrapper.open .custom-options {
-    display: flex;
-}
-
-.custom-option {
-    padding: 8px 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--text-muted);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.custom-option:hover, .custom-option.selected {
-    background: rgba(14, 165, 233, 0.2);
-    color: var(--primary);
-    font-weight: 700;
-}
-
+        .custom-option:hover, .custom-option.selected {
+            background: rgba(14, 165, 233, 0.2);
+            color: var(--primary);
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
@@ -683,6 +631,7 @@
                         ← Dash
                     </button>
                     <input type="text" id="tableFilter" placeholder="Search transactions..." onkeyup="applyFilters()">
+                    <button class="btn-future" style="height:38px; width:55px; padding:0; border-color:var(--success); color:var(--success);" onclick="exportVisibleTableCSV()" title="Save Visible Table Data">SAVE</button>
                     <button class="btn-future-danger" style="height:38px; width:55px; padding:0;" onclick="exitTraceView()">RESET</button>
                 </div>
                 <div class="metrics-bar">
@@ -696,19 +645,20 @@
                     </div>
                 </div>
             </div>
-            <!-- TRACE TOOLBAR (ONLY BACK & LOGOUT) -->
-<div id="trace-toolbar-controls" style="display: none; justify-content: space-between; align-items: center; width: 100%;">
-    <button class="btn-future" onclick="exitTraceView()" style="height: 38px; flex: none; padding: 0 14px;">
-        ← Back
-    </button>
-    <button class="btn-future-danger" onclick="logout()" style="height: 38px; flex: none; padding: 0 14px; border-radius: 12px;">
-        🔐 Logout
-    </button>
-</div>
 
+            <!-- TRACE TOOLBAR (ONLY BACK & LOGOUT) -->
+            <div id="trace-toolbar-controls" style="display: none; justify-content: space-between; align-items: center; width: 100%;">
+                <button class="btn-future" onclick="exitTraceView()" style="height: 38px; flex: none; padding: 0 14px;">
+                    ← Back
+                </button>
+                <button class="btn-future-danger" onclick="logout()" style="height: 38px; flex: none; padding: 0 14px; border-radius: 12px;">
+                    🔐 Logout
+                </button>
+            </div>
         </div>
 
-<div id="displayArea"></div>
+        <div id="displayArea"></div>
+    </div>
 
     <div id="global-filter-modal" class="filter-modal-backdrop" onclick="closeFilterModal(event)">
         <div class="filter-modal-content" onclick="event.stopPropagation()">
@@ -768,7 +718,7 @@ let currentExpenseChart = null;
 let currentPurposeChart = null;
 let currentEntityChart = null;
 let editingRowId = null;
-let activeOverviewMonthKey = null; // Format: "YYYY-MM" (e.g., "2026-08")
+let activeOverviewMonthKey = null;
 
 function changeOverviewMonth(monthKey) {
     activeOverviewMonthKey = monthKey;
@@ -807,7 +757,6 @@ function renderHomeOverview() {
     const headers = monthlySheet.headers;
     const rows = monthlySheet.rows;
 
-    // Resolve column indices
     const dateIdx = headers.findIndex(h => /date/i.test(h));
     const modeIdx = headers.findIndex(h => /transaction type|^type$|^mode$/i.test(h));
     const purposeIdx = headers.findIndex(h => /^purpose$|purpose|reason|category/i.test(h));
@@ -820,13 +769,11 @@ function renderHomeOverview() {
     const currentActualYear = now.getFullYear();
     const currentActualMonth = now.getMonth();
 
-    // Helper: Normalize names to Title Case to merge duplicates
     const normalizeLabel = (str) => {
         if (!str) return "";
         return str.toString().trim().toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
     };
 
-    // Gather available months from data
     const availableMonthsMap = new Map();
     rows.forEach(r => {
         const rowTime = parseDateValue(r[dateIdx]);
@@ -866,7 +813,6 @@ function renderHomeOverview() {
     const purposeAggregates = {};
     const spentForAggregates = {};
 
-    // Aggregate filtered month data
     rows.forEach(r => {
         const rowTime = parseDateValue(r[dateIdx]);
         if (rowTime) {
@@ -899,7 +845,6 @@ function renderHomeOverview() {
     const netCashflow = totalMonthInflow - totalMonthOutflow;
     const dailyBurn = totalMonthOutflow / daysElapsed;
 
-    // Expanded High-Contrast Palette
     const extendedPalette = [
         '#0ea5e9', '#f43f5e', '#8b5cf6', '#f59e0b', '#10b981', 
         '#ec4899', '#06b6d4', '#84cc16', '#a855f7', '#64748b',
@@ -922,7 +867,6 @@ function renderHomeOverview() {
     const spentForValues = sortedSpentFor.map(i => i[1]);
     const spentForColors = spentForLabels.map((_, i) => extendedPalette[(i + 7) % extendedPalette.length]);
 
-    // Helper: Generate Interactive Right-Side Legend/List
     const generateRightSideList = (labels, values, colors, chartRefName) => {
         if (!labels.length) return `<div style="font-size:10px; color:var(--text-muted);">No transactions recorded</div>`;
         return labels.map((label, idx) => {
@@ -945,7 +889,6 @@ function renderHomeOverview() {
 
     let html = `
     <div class="chart-dashboard">
-        <!-- 4-TILE TELEMETRY GRID MATCHING CHART CARDS -->
         <div class="chart-card" style="padding: 14px;">
             <div class="chart-card-header" style="margin-bottom: 10px;">
                 <span class="chart-title">Monthly Telemetry</span>
@@ -973,7 +916,6 @@ function renderHomeOverview() {
             </div>
         </div>
 
-        <!-- CHART 1: PAYMENT MODES -->
         <div class="chart-card">
             <div class="chart-card-header">
                 <span class="chart-title">1. Payment Modes</span>
@@ -1008,7 +950,6 @@ function renderHomeOverview() {
             </div>
         </div>
 
-        <!-- CHART 2: PURPOSE -->
         <div class="chart-card">
             <div class="chart-card-header">
                 <span class="chart-title">2. Outflow By Purpose</span>
@@ -1033,7 +974,6 @@ function renderHomeOverview() {
             </div>
         </div>
 
-        <!-- CHART 3: SPENT FOR / EARNED BY -->
         <div class="chart-card">
             <div class="chart-card-header">
                 <span class="chart-title">3. Spent For / Beneficiaries</span>
@@ -1093,7 +1033,6 @@ function renderHomeOverview() {
         }
     });
 
-    // 1. Chart 1 (Modes)
     const ctx1 = document.getElementById('expenseDonutChart');
     if (ctx1) {
         if (currentExpenseChart) currentExpenseChart.destroy();
@@ -1113,7 +1052,6 @@ function renderHomeOverview() {
         });
     }
 
-    // 2. Chart 2 (Purpose)
     const ctx2 = document.getElementById('purposeDonutChart');
     if (ctx2) {
         if (currentPurposeChart) currentPurposeChart.destroy();
@@ -1133,7 +1071,6 @@ function renderHomeOverview() {
         });
     }
 
-    // 3. Chart 3 (Spent For)
     const ctx3 = document.getElementById('spentForDonutChart');
     if (ctx3) {
         if (currentEntityChart) currentEntityChart.destroy();
@@ -1165,7 +1102,7 @@ function handleTableBack() {
 function exitTraceView() {
     document.getElementById('trace-toolbar-controls').style.display = 'none';
     if (globalRawHeaders.length > 0 && globalRawRows.length > 0) {
-        renderTable(globalRawHeaders, globalRawRows); // Restores the previous table view
+        renderTable(globalRawHeaders, globalRawRows);
     } else if (activeVaultType) {
         viewNamedRange(activeVaultType);
     } else {
@@ -1227,15 +1164,14 @@ function returnToDashboard() {
     document.getElementById('status').innerText = "System Online // Authorized";
     selectedSheetName = "";
     document.getElementById("selectedSheetLabel").innerText = "📄 Select Module";
-    document.querySelectorAll(".sheet-option").forEach(opt => opt.classList.remove("active"));renderHomeOverview();
+    document.querySelectorAll(".sheet-option").forEach(opt => opt.classList.remove("active"));
+    renderHomeOverview();
 }
-
 
 function clearDisplayArea() {
     const area = document.getElementById('displayArea');
     area.innerHTML = '';
 }
-
 
 function normalizeValue(val) {
     return (val ?? "").toString().toLowerCase().replace(/[₹,\s]/g, '').split('.')[0].trim();
@@ -1321,7 +1257,6 @@ async function syncAllData(forceRefresh = false) {
     }
 }
 
-
 function filterRowsLocallyByDate(headers, rows, startStr, endStr) {
     if (!startStr) return rows;
     const dateIndex = headers.findIndex(h => /date/i.test(h));
@@ -1338,7 +1273,6 @@ function filterRowsLocallyByDate(headers, rows, startStr, endStr) {
 }
 
 window.onload = async () => {
-    // Clean up temporary reload URL params if present
     if (window.location.search.includes('_v=')) {
         const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
         window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
@@ -1420,7 +1354,6 @@ async function initializeDashboard() {
     document.getElementById('status').innerText = "System Online // Authorized";
     renderHomeOverview();
 }
-
 
 async function startAuthSequence() {
     setProcessing(true, "REQUESTING ACCESS KEYS...");
@@ -1512,13 +1445,11 @@ async function loadMain() {
     const s = selectedStart;
     const e = selectedEnd;
 
-    // 1. Validation check
     if (selectedSheet === "" && (!s || !e)) {
         return alert("Please select a Module or Date Range.");
     }
 
     try {
-        // CASE A: Specific Module Selected
         if (selectedSheet !== "") {
             setProcessing(true, `RENDERING ${selectedSheet.toUpperCase()}...`);
             const sheetData = globalDataCache.sheets?.[selectedSheet];
@@ -1537,7 +1468,6 @@ async function loadMain() {
             return;
         }
 
-        // CASE B: No Module Selected -> Search Master "Full Statement"
         setProcessing(true, "COMPILING STATEMENT...");
         const masterSheet = globalDataCache.sheets?.["Full Statement"] || globalDataCache.sheets?.["Monthly Transaction"];
         if (!masterSheet || !masterSheet.headers) {
@@ -1557,13 +1487,10 @@ async function loadMain() {
         console.error("Search compile error:", err);
         alert("Failed to render transactions.");
     } finally {
-        // Always dismiss loading overlay, even if an error occurs
         setProcessing(false);
     }
 }
 
-
-/* VAULT VIEW WITH CONTROLS ATTACHED TO STICKY TOOLBAR */
 async function viewNamedRange(rangeName) {
     if (sessionStorage.getItem("finance_auth_v3") !== "true") return;
     if (!globalDataCache) return;
@@ -1673,7 +1600,6 @@ async function viewNamedRange(rangeName) {
     }
 }
 
-/* ACCOUNT SELECTION WITH DATE FILTER INTEGRATION */
 async function filterLedgerByEntity(type, query) {
     if (!globalDataCache) return;
     currentTableMode = 'statement';
@@ -1690,7 +1616,7 @@ async function filterLedgerByEntity(type, query) {
         const qLower = query.toLowerCase().trim();
         
         const matchedRows = fullStatementData.rows.filter(row => {
-            const transType = transIdx !== -1 && row[transIdx] ? String(row[transIdx]).toLowerCase().trim() : "";
+            const transType = transIdx !== -1 && row[transIdx] ? String(row[transType]).toLowerCase().trim() : "";
             const entity = entityIdx !== -1 && row[entityIdx] ? String(row[entityIdx]).toLowerCase().trim() : "";
 
             if (type === "Savings") {
@@ -1746,7 +1672,6 @@ async function fetchOpeningBalance(accountName) {
     );
     return row ? (parseFloat(row[1]) || 0) : 0; 
 }
-
 
 function injectRunningBalance(headers, rows, openingBalance) {
     const depositIdx = headers.findIndex(h => /deposit/i.test(h));
@@ -2048,6 +1973,46 @@ function recalculateMetricsFromSelected() {
     document.getElementById('bar-outflow').innerText = formatINR(totalOutflow);
 }
 
+// SAVE / EXPORT VISIBLE TABLE DATA AS CSV
+function exportVisibleTableCSV() {
+    const table = document.getElementById('mainDataTable');
+    if (!table) {
+        alert("No active table data found to save.");
+        return;
+    }
+
+    const headers = Array.from(table.querySelectorAll('th')).map(th => {
+        let text = th.innerText.replace('▼', '').trim();
+        return `"${text.replace(/"/g, '""')}"`;
+    });
+
+    const rows = Array.from(table.querySelectorAll('tbody tr')).filter(tr => tr.style.display !== 'none');
+    if (rows.length === 0) {
+        alert("No visible rows to save.");
+        return;
+    }
+
+    const csvRows = [headers.join(',')];
+    rows.forEach(tr => {
+        const cells = Array.from(tr.querySelectorAll('td')).map(td => {
+            let text = td.innerText.trim();
+            return `"${text.replace(/"/g, '""')}"`;
+        });
+        csvRows.push(cells.join(','));
+    });
+
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `finance_export_${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
 async function fetchAssociated() {
     if (!globalDataCache) return;
     toggleDashboard(false);
@@ -2056,12 +2021,9 @@ async function fetchAssociated() {
     if (!ids.length) return;
     setProcessing(true, "TRACING SYSTEM REFERENCES...");
 
-    // Hide dashboard, standard toolbar rows & other controls
     document.querySelectorAll('.toolbar-row').forEach(row => row.style.display = 'none');
     document.getElementById('table-toolbar-controls').style.display = 'none';
     document.getElementById('vault-toolbar-controls').style.display = 'none';
-    
-    // Show only Back and Logout controls
     document.getElementById('trace-toolbar-controls').style.display = 'flex';
 
     try {
@@ -2073,7 +2035,7 @@ async function fetchAssociated() {
             }
         }
 
-        let finalHtml = ""; // Banner removed completely
+        let finalHtml = "";
         let foundAnyData = false;
 
         for (const sheetName in grouped) {
@@ -2121,7 +2083,6 @@ async function fetchAssociated() {
     }
 }
 
-
 let longPressTimer;
 function showContextMenu(e, rowElement) {
     if (e.cancelable) e.preventDefault();
@@ -2160,6 +2121,7 @@ async function executeCommand(type) {
     else if (type === 'trace') fetchAssociated();
     else if (type === 'purge') deleteRecords();
 }
+
 window.addEventListener('click', (e) => {
     if (!e.target.closest('.custom-select-wrapper')) {
         document.querySelectorAll('.custom-select-wrapper').forEach(el => el.classList.remove('open'));
@@ -2174,14 +2136,10 @@ document.addEventListener('touchstart', function(e) {
 document.addEventListener('touchend', () => clearTimeout(longPressTimer));
 document.addEventListener('touchmove', () => clearTimeout(longPressTimer));
 
-/* DEEP CACHE PURGE & FORCE DEPLOYMENT RELOAD */
 async function forceAppReload() {
     setProcessing(true, "PURGING CACHE & RELOADING...");
-    
-    // 1. Clear LocalStorage JSON Cache
     localStorage.removeItem("finance_data_cache_v3");
 
-    // 2. Clear all PWA Cache Storage
     if ('caches' in window) {
         try {
             const keys = await caches.keys();
@@ -2189,7 +2147,6 @@ async function forceAppReload() {
         } catch(e) { console.warn("Cache API clear failed:", e); }
     }
 
-    // 3. Unregister active Service Workers
     if ('serviceWorker' in navigator) {
         try {
             const registrations = await navigator.serviceWorker.getRegistrations();
@@ -2199,13 +2156,10 @@ async function forceAppReload() {
         } catch(e) { console.warn("ServiceWorker unregister failed:", e); }
     }
 
-    // 4. Force hard reload with timestamp parameter
     const currentUrl = new URL(window.location.href);
     currentUrl.searchParams.set('_v', Date.now());
     window.location.href = currentUrl.toString();
 }
-
-
 
 async function copyRowToClipboard(rowElement) {
     const table = document.getElementById('mainDataTable');
@@ -2276,10 +2230,10 @@ function openEditModal(rowElement) {
     document.getElementById('edit-fields').innerHTML = fieldsHtml;
     document.getElementById('edit-modal').style.display = "flex";
 }
+
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
         setTimeout(() => {
-            // Only re-render the home overview if the chart dashboard/display area is currently active
             const displayArea = document.getElementById('displayArea');
             const isDashboardActive = displayArea && displayArea.querySelector('.chart-dashboard');
             
@@ -2328,7 +2282,6 @@ function showLogoutScreen() {
         </div>
     `;
 }
-
 
 function logout() {
     sessionStorage.clear();
