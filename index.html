@@ -679,9 +679,7 @@
                     <button class="btn-future" style="height: 36px; flex: 1.2; border-color: var(--gold); color: var(--gold);" onclick="openColumnSelector()" title="Toggle Columns">
                         📋 Columns <span id="col-count-badge" style="margin-left: 6px; font-weight: 800; background: rgba(245,158,11,0.2); padding: 2px 6px; border-radius: 4px; font-size: 10px;">All</span>
                     </button>
-                    <button class="btn-future" style="height: 36px; flex: 1; border-color: var(--success); color: var(--success);" onclick="exportTableToTIFF()" title="Export TIFF">
-                        📸 TIFF
-                    </button>
+                   
                     <button class="btn-future" style="height: 36px; flex: 1; border-color: var(--primary); color: var(--primary);" onclick="shareTableAsImage()" title="Share Statement">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> Share
                     </button>
@@ -893,27 +891,6 @@ async function generateFullTableCanvas() {
     return canvas;
 }
 
-// ---------------- EXPORT TIFF HANDLER ----------------
-async function exportTableToTIFF() {
-    setProcessing(true, "GENERATING TIFF...");
-    try {
-        const canvas = await generateFullTableCanvas();
-        if (!canvas) {
-            alert("No table available to export.");
-            return;
-        }
-
-        const link = document.createElement('a');
-        link.download = `FCC_Statement_${new Date().toISOString().slice(0,10)}.tiff`;
-        link.href = canvas.toDataURL('image/tiff');
-        link.click();
-    } catch(e) {
-        console.error("Export Error:", e);
-        alert("Image export failed.");
-    } finally {
-        setProcessing(false);
-    }
-}
 
 // ---------------- NATIVE SHARE HANDLER ----------------
 async function shareTableAsImage() {
