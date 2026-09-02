@@ -16,6 +16,7 @@
     
     <!-- Required for Image Export feature -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -680,9 +681,10 @@
                         📋 Columns <span id="col-count-badge" style="margin-left: 6px; font-weight: 800; background: rgba(245,158,11,0.2); padding: 2px 6px; border-radius: 4px; font-size: 10px;">All</span>
                     </button>
                    
-                    <button class="btn-future" style="height: 36px; flex: 1; border-color: var(--primary); color: var(--primary);" onclick="shareTableAsImage()" title="Share Statement">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> Share
-                    </button>
+ <button class="btn-future" style="height: 36px; flex: 1; border-color: var(--primary); color: var(--primary);" onclick="openShareModal()" title="Share Statement">
+    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> Share
+</button>
+
                 </div>
 
                 <div class="metrics-bar" style="grid-template-columns: repeat(3, 1fr);">
@@ -753,6 +755,21 @@
             </div>
         </div>
     </div>
+<div id="share-format-modal" class="filter-modal-backdrop" onclick="closeShareModal(event)">
+    <div class="filter-modal-content" style="max-width: 320px; padding: 20px; text-align: center; border-color: var(--primary);" onclick="event.stopPropagation()">
+        <div style="font-size:13px; font-weight:800; color:var(--primary); margin-bottom: 8px; letter-spacing:1px;">📤 SHARE STATEMENT</div>
+        <div style="font-size:10px; color:var(--text-muted); margin-bottom: 20px;">SELECT EXPORT FORMAT</div>
+        
+        <div style="display:flex; gap:10px;">
+            <button class="btn-future" style="flex:1; height:45px; border-color: var(--danger); color: var(--danger); background: rgba(244,63,94,0.05);" onclick="executeShare('pdf')">
+                📄 PDF
+            </button>
+            <button class="btn-future" style="flex:1; height:45px; border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.05);" onclick="executeShare('image')">
+                📸 TIFF
+            </button>
+        </div>
+    </div>
+</div>
 
     <div id="custom-context-menu"></div>
 
@@ -893,39 +910,66 @@ async function generateFullTableCanvas() {
 
 
 // ---------------- NATIVE SHARE HANDLER ----------------
-async function shareTableAsImage() {
-    setProcessing(true, "PREPARING SHARE...");
+// Open/Close Modal
+function openShareModal() {
+    const tableWrap = document.getElementById('tableWrap');
+    if (!tableWrap) return alert("No table available to share.");
+    document.getElementById('share-format-modal').classList.add('open');
+}
+
+function closeShareModal(e) {
+    if (!e || e.target.id === 'share-format-modal') {
+        document.getElementById('share-format-modal').classList.remove('open');
+    }
+}
+
+// Master Share Execution Logic
+async function executeShare(format) {
+    closeShareModal();
+    setProcessing(true, `PREPARING ${format.toUpperCase()}...`);
+    
     try {
         const canvas = await generateFullTableCanvas();
-        if (!canvas) {
-            alert("No table available to share.");
-            return;
+        if (!canvas) throw new Error("Canvas generation failed.");
+
+        let fileToShare, fileName;
+
+        if (format === 'pdf') {
+            // Generate a custom-sized PDF based exactly on the canvas dimensions
+            // This prevents awkward page breaks cutting through rows
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF(canvas.width > canvas.height ? 'l' : 'p', 'pt', [canvas.width, canvas.height]);
+            pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, 0, canvas.width, canvas.height);
+            
+            const pdfBlob = pdf.output('blob');
+            fileName = `FCC_Statement_${new Date().toISOString().slice(0,10)}.pdf`;
+            fileToShare = new File([pdfBlob], fileName, { type: 'application/pdf' });
+        } 
+        else {
+            // Image format (using PNG blob under the hood for cross-app compatibility, labeled as TIFF/PNG)
+            const imgBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            fileName = `FCC_Statement_${new Date().toISOString().slice(0,10)}.png`;
+            fileToShare = new File([imgBlob], fileName, { type: 'image/png' });
         }
 
-        // Convert Canvas to Blob (PNG is universally accepted by mobile share menus)
-        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-        const file = new File([blob], `FCC_Statement_${new Date().toISOString().slice(0,10)}.png`, { type: 'image/png' });
-
-        if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-                await navigator.share({
-                    files: [file],
-                    title: 'Transaction Statement',
-                    text: 'Finance Command Center Statement'
-                });
-            } catch (error) {
-                console.log('Share canceled or failed:', error);
-            }
+        // Trigger Native Web Share
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
+            await navigator.share({
+                files: [fileToShare],
+                title: 'Transaction Statement',
+                text: 'Encrypted Finance Command Center Statement'
+            });
         } else {
-            alert("Native sharing is not supported on this device/browser. Downloading instead.");
+            // Fallback for desktop or unsupported mobile browsers
+            alert(`Native sharing not supported. Downloading ${format.toUpperCase()} instead.`);
             const link = document.createElement('a');
-            link.download = file.name;
-            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.href = URL.createObjectURL(fileToShare);
             link.click();
         }
     } catch(e) {
         console.error("Share Error:", e);
-        alert("Share preparation failed.");
+        alert(`Failed to share ${format.toUpperCase()}.`);
     } finally {
         setProcessing(false);
     }
