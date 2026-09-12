@@ -14,9 +14,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
     
-    <!-- Required for Image Export feature -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -41,7 +40,7 @@
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-        html {
+        html, body {
             height: 100vh;
             height: 100dvh;
             overflow: hidden;
@@ -53,9 +52,6 @@
             color: var(--text);
             margin: 0;
             padding: calc(env(safe-area-inset-top) + 8px) 8px calc(env(safe-area-inset-bottom) + 8px) 8px;
-            height: 100vh;
-            height: 100dvh;
-            overflow: hidden;
         }
 
         body::after {
@@ -159,7 +155,7 @@
             border: 1px solid var(--border);
             border-radius: 16px;
             padding: 10px;
-            margin-bottom: 24px;
+            margin-bottom: 12px;
             display: flex;
             flex-direction: column;
             gap: 8px;
@@ -228,6 +224,7 @@
             gap: 4px;
             flex: 1;
             white-space: nowrap;
+            cursor: pointer;
         }
 
         .btn-future-danger {
@@ -243,6 +240,7 @@
             align-items: center;
             justify-content: center;
             white-space: nowrap;
+            cursor: pointer;
         }
 
         .btn-login {
@@ -263,12 +261,6 @@
             box-shadow: 0 0 15px rgba(14, 165, 233, 0.25);
             transition: all 0.25s ease;
             cursor: pointer;
-        }
-
-        .btn-login:active {
-            transform: scale(0.96);
-            background: var(--primary);
-            color: var(--bg);
         }
 
         .search-row { display: flex; gap: 6px; align-items: center; width: 100%; }
@@ -302,7 +294,7 @@
         .sheet-card {
             background: var(--surface);
             backdrop-filter: var(--glass-blur);
-            border: 1px solid var(--border);
+            border: 1px solid rgba(14, 165, 233, 0.25);
             border-radius: 18px;
             overflow: hidden;
             box-shadow: var(--card-shadow);
@@ -313,51 +305,132 @@
         }
 
         .table-wrap {
-            overflow-x: auto;
             overflow-y: auto;
-            width: 100%;
-            height: 95%;
-            -webkit-overflow-scrolling: touch;
-            flex: 1;
-            padding-bottom:50px;
-        }
-
-        .vault-card-wrap {
-            overflow-y: auto;
+            overflow-x: hidden;
             width: 100%;
             height: 100%;
             -webkit-overflow-scrolling: touch;
-            padding-bottom: calc(env(safe-area-inset-bottom) + 16px);
             flex: 1;
+            padding: 10px;
+            padding-bottom: 70px;
         }
 
-        table {
-            border-collapse: collapse;
+        .vault-card-wrap, .table-wrap { overflow-y: auto; overflow-x: hidden; width: 100%; height: 100%; -webkit-overflow-scrolling: touch; padding-bottom: calc(env(safe-area-inset-bottom) + 2px);padding-top: calc(env(safe-area-inset-bottom) + 2px);flex: 1; }
+      
+        /* --- TRANSACTION CARD STYLES --- */
+        .cards-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
             width: 100%;
-            table-layout: auto;
-            white-space: nowrap;
         }
 
-        th {
-            position: sticky; top: 0; z-index: 20;
-            background: #111827 !important;
-            padding: 12px 10px;
+        .tx-card {
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(14, 165, 233, 0.35);
+            border-radius: 14px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .tx-card.selected {
+            border-color: var(--primary);
+            background: rgba(14, 165, 233, 0.12);
+            box-shadow: 0 0 12px rgba(14, 165, 233, 0.25);
+        }
+
+        .tx-card-main {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+        }
+
+        .tx-card-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tx-narration {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text);
+            white-space: normal;
+            word-break: break-word;
+            line-height: 1.35;
+        }
+
+        .tx-account {
             font-size: 11px;
+            font-weight: 600;
             color: var(--text-muted);
-            border-bottom: 1px solid var(--border);
-            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        td {
-            padding: 12px 10px;
-            font-size: 12px;
-            border-bottom: 1px solid var(--border);
-            text-align: center;
+        .tx-amount {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 15px;
+            font-weight: 800;
+            white-space: nowrap;
+            text-align: right;
+            align-self: center;
         }
 
-        .data-row.selected { background: rgba(14, 165, 233, 0.2) !important; }
-        .id-badge { font-family: 'JetBrains Mono'; font-size: 9px; background: rgba(14, 165, 233, 0.15); color: var(--primary); padding: 4px 8px; border-radius: 4px; }
+        .tx-amount.inflow { color: var(--success); }
+        .tx-amount.outflow { color: var(--danger); }
+        .tx-amount.neutral { color: var(--primary); }
+        .tx-amount.transfer { color: var(--gold); }
+        .tx-expanded-body {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.12);
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            animation: fadeIn 0.2s ease-out;
+        }
 
+        .tx-card.expanded .tx-expanded-body {
+            display: flex;
+        }
+
+        .tx-detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .tx-detail-label {
+            color: var(--text-muted);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 9px;
+            letter-spacing: 0.5px;
+        }
+
+        .tx-detail-value {
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            text-align: right;
+            max-width: 65%;
+            word-break: break-word;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- SPLIT PANE FILTER MODAL --- */
         .filter-modal-backdrop {
             display: none;
             position: fixed;
@@ -367,26 +440,91 @@
             z-index: 999999;
             align-items: center;
             justify-content: center;
-            padding: 16px;
+            padding: 12px;
         }
 
         .filter-modal-backdrop.open { display: flex; }
 
-        .filter-modal-content {
+        .split-filter-modal {
             background: #0f172a;
             border: 1px solid var(--primary);
             border-radius: 18px;
             width: 100%;
-            max-width: 360px;
-            padding: 16px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.95);
+            max-width: 540px;
+            height: 75vh;
+            max-height: 600px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.95);
+            overflow: hidden;
+        }
+
+        .split-filter-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .split-filter-body {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+        }
+
+        .split-filter-headers-col {
+            width: 40%;
+            background: rgba(0, 0, 0, 0.4);
+            border-right: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .filter-header-nav-item {
+            padding: 10px 10px;
+            border-radius: 8px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid transparent;
+        }
+
+        .filter-header-nav-item.active {
+            background: rgba(14, 165, 233, 0.15);
+            color: var(--primary);
+            border-color: rgba(14, 165, 233, 0.4);
+        }
+
+        .filter-header-nav-item .active-filter-badge {
+            background: var(--gold);
+            color: #000;
+            font-size: 9px;
+            font-weight: 800;
+            padding: 1px 5px;
+            border-radius: 10px;
+        }
+
+        .split-filter-elements-col {
+            width: 60%;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+            gap: 8px;
+            overflow-y: auto;
         }
 
         .filter-options-container {
-            max-height: 220px;
+            flex: 1;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
@@ -394,14 +532,15 @@
         }
 
         .filter-option {
-            padding: 10px 12px;
+            padding: 9px 12px;
             border-radius: 8px;
             background: rgba(255,255,255,0.04);
             border: 1px solid rgba(255,255,255,0.06);
-            font-size: 12px;
+            font-size: 11px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            cursor: pointer;
         }
 
         .filter-option.selected {
@@ -413,6 +552,15 @@
 
         .filter-option.selected::after { content: "✓"; font-size: 11px; }
 
+        .split-filter-footer {
+            padding: 10px 14px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        /* --- CONTEXT MENU & MODALS --- */
         #custom-context-menu {
             position: fixed; display: none; bottom: 0; left: 0; right: 0; top: auto !important;
             z-index: 100000;
@@ -436,6 +584,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            cursor: pointer;
         }
 
         .menu-item.danger { color: var(--danger); }
@@ -452,149 +601,93 @@
             display: flex; 
             flex:2;
             flex-direction: column; 
-              gap: 16px; 
+            gap: 16px; 
             padding: 16px 2px calc(env(safe-area-inset-bottom) + 40px) 2px; 
         }
-        .card-grid .fin-panel:last-child { margin-bottom: 0; }
         .fin-panel { background: rgba(15,23,42,0.85); border-radius: 14px; padding: 15px 13px; border: 1px solid rgba(14,165,233,0.2); }
 
-/* --- 3-PIE / DONUT DASHBOARD STYLING --- */
-.chart-dashboard {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding-bottom: 70px; 
-    overflow-y: auto;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    flex: 1;
-}
+        /* --- DASHBOARD CHARTS --- */
+        .chart-dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-bottom: 70px; 
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            flex: 1;
+        }
 
-.chart-card {
-    background: var(--surface);
-    backdrop-filter: var(--glass-blur);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 14px;
-    position: relative;
-    margin-bottom:4px;
-    overflow:visible;
-}
+        .chart-card {
+            background: var(--surface);
+            backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 14px;
+            position: relative;
+            margin-bottom: 4px;
+            overflow: visible;
+        }
 
-.chart-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 12px;
-}
+        .chart-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
 
-.chart-title {
+        .chart-title {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .custom-select-wrapper { position: relative; display: inline-block; user-select: none; }
+        .custom-select-trigger {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--primary);
+            color: var(--text);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 0 10px rgba(14, 165, 233, 0.15);
+        }
+        .custom-select-trigger::after { content: "▼"; font-size: 8px; color: var(--primary); }
+        .custom-options {
+            position: absolute; top: 115%; right: 0; background: #0f172a;
+            border: 1px solid var(--primary); border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8); display: none;
+            flex-direction: column; gap: 4px; padding: 6px; z-index: 99999;
+            min-width: 130px; max-height: 150px; overflow-y: auto;
+        }
+        .custom-select-wrapper.open .custom-options { display: flex; }
+        .custom-option {
+            padding: 8px 10px; font-family: 'JetBrains Mono', monospace;
+            font-size: 11px; color: var(--text-muted); border-radius: 6px;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .custom-option:hover, .custom-option.selected {
+            background: rgba(14, 165, 233, 0.2); color: var(--primary); font-weight: 700;
+        }
+      .tx-chevron {
     font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 1.5px;
     color: var(--text-muted);
-    text-transform: uppercase;
-}
-
-.chart-wrapper-pie {
-    position: relative;
-    width: 100%;
-    height: 180px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.chart-center-metric {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    pointer-events: none;
-}
-
-.chart-center-label {
-    font-size: 8px;
-    color: var(--text-muted);
-    font-weight: 800;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-}
-
-.chart-center-val {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    font-weight: 800;
-    color: var(--danger);
-}
-
-/* --- CUSTOM THEME MONTH SELECTOR --- */
-.custom-select-wrapper {
-    position: relative;
+    transition: transform 0.2s ease;
+    margin-left: 6px;
     display: inline-block;
-    user-select: none;
+}
+.tx-card.expanded .tx-chevron {
+    transform: rotate(180deg);
 }
 
-.custom-select-trigger {
-    background: rgba(0, 0, 0, 0.6);
-    border: 1px solid var(--primary);
-    color: var(--text);
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 6px 12px;
-    border-radius: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    box-shadow: 0 0 10px rgba(14, 165, 233, 0.15);
-}
-
-.custom-select-trigger::after {
-    content: "▼";
-    font-size: 8px;
-    color: var(--primary);
-}
-
-.custom-options {
-    position: absolute;
-    top: 115%;
-    right: 0;
-    background: #0f172a;
-    border: 1px solid var(--primary);
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
-    display: none;
-    flex-direction: column;
-    gap: 4px;
-    padding: 6px;
-    z-index: 99999;
-    min-width: 130px;
-    max-height: 150px;
-    overflow-y: auto;
-}
-
-.custom-select-wrapper.open .custom-options {
-    display: flex;
-}
-
-.custom-option {
-    padding: 8px 10px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    color: var(--text-muted);
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-}
-
-.custom-option:hover, .custom-option.selected {
-    background: rgba(14, 165, 233, 0.2);
-    color: var(--primary);
-    font-weight: 700;
-}
     </style>
 </head>
 <body>
@@ -628,7 +721,6 @@
         </div>
 
         <div class="toolbar">
-            <!-- ROW 1: MODULE SELECTOR & LOGOUT -->
             <div class="toolbar-row">
                 <div class="sheet-selector" id="sheetSelector">
                     <div class="sheet-selector-trigger" onclick="toggleSheetDropdown(event)">
@@ -645,7 +737,6 @@
                 </button>
             </div>
 
-            <!-- ROW 2: FLATPICKR, SEARCH & SYNC -->
             <div class="toolbar-row">
                 <input type="text" id="dateRange" class="range-input" placeholder="📅 Date Range" readonly style="flex: 1.4; min-width: 0;">
                 <button class="btn-future" onclick="loadMain()" style="flex: 0.8; height: 42px;">Search</button>
@@ -654,7 +745,6 @@
                 </button>
             </div>
 
-            <!-- DYNAMIC VAULT HEADER ATTACHED DIRECTLY TO TOOLBAR -->
             <div id="vault-toolbar-controls" style="display: none; justify-content: space-between; align-items: center; width: 100%; border-top: 1px solid var(--border); padding-top: 8px;">
                 <button class="btn-future" onclick="returnToDashboard()" style="height:36px; padding:0 12px; width:auto; border-color:var(--primary); flex:none;">
                     ← Back to Dashboard
@@ -664,30 +754,27 @@
                 </div>
             </div>
 
-            <!-- TABLE SEARCH BAR & METRICS (FIXED INSIDE TOOLBAR) -->
             <div id="table-toolbar-controls" style="display: none; flex-direction: column; gap: 8px; width: 100%; border-top: 1px solid var(--border); padding-top: 8px;">
                 <div class="search-row">
                     <button class="btn-future" onclick="handleTableBack()" style="height:38px; flex:none; padding:0 10px; border-color:var(--primary);">
                         ← Dash
                     </button>
-                    <!-- Search bar reclaimed full width -->
                     <input type="text" id="tableFilter" placeholder="Search transactions..." onkeyup="applyFilters()">
                     <button class="btn-future-danger" style="height:38px; width:55px; padding:0;" onclick="resetAllFilters()">RESET</button>
                 </div>
                 
-                <!-- NEW ACTION ROW: Clean, evenly distributed layout for Columns, Export, and Share -->
                 <div style="display: flex; gap: 6px; width: 100%;">
-                    <button class="btn-future" style="height: 36px; flex: 1.2; border-color: var(--gold); color: var(--gold);" onclick="openColumnSelector()" title="Toggle Columns">
-                        📋 Columns <span id="col-count-badge" style="margin-left: 6px; font-weight: 800; background: rgba(245,158,11,0.2); padding: 2px 6px; border-radius: 4px; font-size: 10px;">All</span>
+                    <!-- Filter Button popup with split view -->
+                    <button class="btn-future" style="height: 36px; flex: 1.2; border-color: var(--gold); color: var(--gold);" onclick="openGlobalFilterModal()" title="Filter Data">
+                        🌪️ Filter <span id="active-filter-badge" style="display:none; margin-left:6px; font-weight:800; background:rgba(245,158,11,0.25); padding:2px 6px; border-radius:4px; font-size:10px;">0</span>
                     </button>
                    
- <button class="btn-future" style="height: 36px; flex: 1; border-color: var(--primary); color: var(--primary);" onclick="openShareModal()" title="Share Statement">
-    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> Share
-</button>
-
+                    <button class="btn-future" style="height: 36px; flex: 1; border-color: var(--primary); color: var(--primary);" onclick="openShareModal()" title="Share Statement">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> Share
+                    </button>
                 </div>
 
-                <div class="metrics-bar" style="grid-template-columns: repeat(3, 1fr);">
+                <div class="metrics-bar">
                     <div class="metric-pill">
                         <span class="pill-label">Inflow</span>
                         <span class="pill-val" id="bar-inflow" style="color:var(--success);">₹0</span>
@@ -702,7 +789,7 @@
                     </div>
                 </div>
             </div>
-            <!-- TRACE TOOLBAR (ONLY BACK & LOGOUT) -->
+
             <div id="trace-toolbar-controls" style="display: none; justify-content: space-between; align-items: center; width: 100%;">
                 <button class="btn-future" onclick="exitTraceView()" style="height: 38px; flex: none; padding: 0 14px;">
                     ← Back
@@ -711,65 +798,54 @@
                     🔐 Logout
                 </button>
             </div>
-
         </div>
 
-<div id="displayArea"></div>
+        <div id="displayArea"></div>
+    </div>
 
-    <!-- Data Filter Modal -->
+    <!-- Split-Pane Data Filter Modal -->
     <div id="global-filter-modal" class="filter-modal-backdrop" onclick="closeFilterModal(event)">
-        <div class="filter-modal-content" onclick="event.stopPropagation()">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span id="filter-modal-title" style="font-size:12px; font-weight:800; color:var(--primary); text-transform:uppercase;">Filter Column</span>
-                <button onclick="closeFilterModal()" style="background:none; border:none; color:var(--text-muted); font-size:16px;">✕</button>
+        <div class="split-filter-modal" onclick="event.stopPropagation()">
+            <div class="split-filter-header">
+                <span style="font-size:12px; font-weight:800; color:var(--primary); text-transform:uppercase; letter-spacing:1px;">🌪️ Filter Dataset</span>
+                <button onclick="closeFilterModal()" style="background:none; border:none; color:var(--text-muted); font-size:18px; cursor:pointer;">✕</button>
             </div>
-            <input type="text" id="filter-search-input" class="range-input" style="height:36px;" placeholder="Search options..." onkeyup="filterColumnOptions(this.value)">
-            <div id="modal-options-container" class="filter-options-container"></div>
-            <div style="display:flex; gap:6px; margin-top:6px;">
-                <button class="btn-future" style="height:36px; font-size:10px;" onclick="selectAllModalOptions()">SELECT ALL</button>
-                <button class="btn-future" style="height:36px; font-size:10px;" onclick="confirmModalFilter()">APPLY</button>
-                <button class="btn-future-danger" style="height:36px; font-size:10px;" onclick="clearModalFilter()">CLEAR</button>
+            
+            <div class="split-filter-body">
+                <!-- Left Edge: Headers -->
+                <div class="split-filter-headers-col" id="filter-headers-list"></div>
+                
+                <!-- Right Side: Elements according to selected header -->
+                <div class="split-filter-elements-col">
+                    <input type="text" id="filter-elements-search" class="range-input" style="height:34px; text-align:left; font-size:11px;" placeholder="Search values..." onkeyup="filterOptionElements(this.value)">
+                    <div id="modal-options-container" class="filter-options-container"></div>
+                </div>
+            </div>
+
+            <div class="split-filter-footer">
+                <button class="btn-future" style="height:36px; font-size:10px;" onclick="selectAllCurrentModalOptions()">SELECT ALL</button>
+                <button class="btn-future-danger" style="height:36px; font-size:10px;" onclick="clearCurrentModalFilter()">CLEAR HEADER</button>
+                <button class="btn-future" style="height:36px; font-size:10px; border-color:var(--success); color:var(--success);" onclick="confirmModalFilter()">APPLY FILTERS</button>
             </div>
         </div>
     </div>
 
-    <!-- Column Visibility Modal -->
-    <div id="column-visibility-modal" class="filter-modal-backdrop" onclick="closeColumnModal(event)">
-        <div class="filter-modal-content" style="max-width: 380px; padding: 18px;" onclick="event.stopPropagation()">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
-                <span style="font-size:13px; font-weight:800; color:var(--gold); text-transform:uppercase;">📋 SHOW / HIDE COLUMNS</span>
-                <button onclick="closeColumnModal()" style="background:none; border:none; color:var(--text-muted); font-size:18px;">✕</button>
-            </div>
+    <!-- Share Format Modal -->
+    <div id="share-format-modal" class="filter-modal-backdrop" onclick="closeShareModal(event)">
+        <div class="filter-modal-content" style="background:#0f172a; border:1px solid var(--primary); border-radius:18px; width:100%; max-width:320px; padding:20px; text-align:center;" onclick="event.stopPropagation()">
+            <div style="font-size:13px; font-weight:800; color:var(--primary); margin-bottom: 8px; letter-spacing:1px;">📤 SHARE STATEMENT</div>
+            <div style="font-size:10px; color:var(--text-muted); margin-bottom: 20px;">SELECT EXPORT FORMAT</div>
             
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 16px;">
-                <button class="btn-future" style="height:34px; font-size:10px; border-color:var(--primary); color:var(--primary);" onclick="colHiderSetAll(true)">☑ All</button>
-                <button class="btn-future-danger" style="height:34px; font-size:10px; border-color:var(--danger); color:var(--danger); background:rgba(244,63,94,0.05);" onclick="colHiderSetAll(false)">☐ None</button>
-                <button class="btn-future" style="height:34px; font-size:10px; border-color:var(--success); color:var(--success); background:rgba(16,185,129,0.05);" onclick="applyColHider()">Apply</button>
-                <button class="btn-future-danger" style="height:34px; font-size:10px;" onclick="resetColHider()">Reset</button>
-            </div>
-
-            <div id="column-options-container" class="filter-options-container" style="max-height: 280px; padding-right:4px;"></div>
-            
-            <div id="col-hider-footer" style="text-align:center; font-size:10px; color:var(--text-muted); margin-top:14px; font-weight: 600;">
-                <!-- Dynamically updated -->
+            <div style="display:flex; gap:10px;">
+                <button class="btn-future" style="flex:1; height:45px; border-color: var(--danger); color: var(--danger); background: rgba(244,63,94,0.05);" onclick="executeShare('pdf')">
+                    📄 PDF
+                </button>
+                <button class="btn-future" style="flex:1; height:45px; border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.05);" onclick="executeShare('image')">
+                    📸 PNG / TIFF
+                </button>
             </div>
         </div>
     </div>
-<div id="share-format-modal" class="filter-modal-backdrop" onclick="closeShareModal(event)">
-    <div class="filter-modal-content" style="max-width: 320px; padding: 20px; text-align: center; border-color: var(--primary);" onclick="event.stopPropagation()">
-        <div style="font-size:13px; font-weight:800; color:var(--primary); margin-bottom: 8px; letter-spacing:1px;">📤 SHARE STATEMENT</div>
-        <div style="font-size:10px; color:var(--text-muted); margin-bottom: 20px;">SELECT EXPORT FORMAT</div>
-        
-        <div style="display:flex; gap:10px;">
-            <button class="btn-future" style="flex:1; height:45px; border-color: var(--danger); color: var(--danger); background: rgba(244,63,94,0.05);" onclick="executeShare('pdf')">
-                📄 PDF
-            </button>
-            <button class="btn-future" style="flex:1; height:45px; border-color: var(--success); color: var(--success); background: rgba(16,185,129,0.05);" onclick="executeShare('image')">
-                📸 TIFF
-            </button>
-        </div>
-    </div>
-</div>
 
     <div id="custom-context-menu"></div>
 
@@ -806,7 +882,8 @@ let selectedEnd = "";
 let globalRawHeaders = [];
 let globalRawRows = [];
 let activeFilters = {};
-let activeModalField = null;
+let tempFilters = {};
+let activeSelectedHeader = null;
 let globalDataCache = null;
 let activeVaultType = null; 
 let currentExpenseChart = null;
@@ -814,21 +891,19 @@ let currentPurposeChart = null;
 let currentEntityChart = null;
 let editingRowId = null;
 let activeOverviewMonthKey = null; 
-let hiddenColumnNames = new Set(); 
-let tempHiddenColumns = new Set(); 
 
-// ---------------- FULL TABLE GENERATOR (SHARED HELPER) ----------------
+// ---------------- CANVAS EXPORT ENGINE ----------------
 async function generateFullTableCanvas() {
-    const tableWrap = document.getElementById('tableWrap');
-    if (!tableWrap) return null;
+    const listWrap = document.getElementById('tableWrap');
+    if (!listWrap) return null;
 
     const exportDiv = document.createElement('div');
     exportDiv.style.position = 'absolute';
     exportDiv.style.left = '-9999px';
     exportDiv.style.top = '0';
-    exportDiv.style.width = '1200px'; 
+    exportDiv.style.width = '700px'; 
     exportDiv.style.backgroundColor = '#030712';
-    exportDiv.style.padding = '30px';
+    exportDiv.style.padding = '24px';
     exportDiv.style.boxSizing = 'border-box';
     exportDiv.style.color = '#f8fafc';
     exportDiv.style.fontFamily = "'Plus Jakarta Sans', sans-serif";
@@ -839,60 +914,39 @@ async function generateFullTableCanvas() {
     const netColor = document.getElementById('bar-net').style.color;
 
     exportDiv.innerHTML = `
-        <div style="text-align: center; margin-bottom: 24px;">
-            <h2 style="color: #0ea5e9; font-family: 'JetBrains Mono', monospace; font-size: 24px; letter-spacing: 2px; margin-bottom: 16px;">TRANSACTION STATEMENT</h2>
-            <div style="display: flex; justify-content: center; gap: 16px;">
-                <div style="background: rgba(15,23,42,0.85); padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                    <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Inflow</div>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 800; color: #10b981;">${inflow}</div>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #0ea5e9; font-family: 'JetBrains Mono', monospace; font-size: 20px; letter-spacing: 2px; margin-bottom: 14px;">TRANSACTION STATEMENT</h2>
+            <div style="display: flex; justify-content: center; gap: 12px;">
+                <div style="background: rgba(15,23,42,0.85); padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase; font-weight: 800;">Inflow</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 800; color: #10b981;">${inflow}</div>
                 </div>
-                <div style="background: rgba(15,23,42,0.85); padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                    <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Outflow</div>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 800; color: #f43f5e;">${outflow}</div>
+                <div style="background: rgba(15,23,42,0.85); padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase; font-weight: 800;">Outflow</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 800; color: #f43f5e;">${outflow}</div>
                 </div>
-                <div style="background: rgba(15,23,42,0.85); padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                    <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Net Balance</div>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 800; color: ${netColor};">${net}</div>
+                <div style="background: rgba(15,23,42,0.85); padding: 10px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size: 9px; color: #94a3b8; text-transform: uppercase; font-weight: 800;">Net</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 800; color: ${netColor};">${net}</div>
                 </div>
             </div>
         </div>
     `;
 
-    const tableClone = document.getElementById('mainDataTable').cloneNode(true);
-    
-    tableClone.style.width = '100%';
-    tableClone.style.borderCollapse = 'collapse';
-    
-    const ths = tableClone.querySelectorAll('th');
-    ths.forEach(th => {
-        th.style.background = '#111827';
-        th.style.padding = '12px 10px';
-        th.style.fontSize = '12px';
-        th.style.color = '#94a3b8';
-        th.style.borderBottom = '1px solid rgba(255,255,255,0.08)';
-        th.style.textAlign = 'center';
-        th.style.position = 'static'; 
-    });
-    
-    const tds = tableClone.querySelectorAll('td');
-    tds.forEach(td => {
-        td.style.padding = '12px 10px';
-        td.style.fontSize = '12px';
-        td.style.borderBottom = '1px solid rgba(255,255,255,0.08)';
-        td.style.textAlign = 'center';
-        td.style.whiteSpace = 'normal'; 
+    const visibleCards = Array.from(document.querySelectorAll('.tx-card')).filter(c => c.style.display !== 'none');
+    const cardsCloneContainer = document.createElement('div');
+    cardsCloneContainer.style.display = 'flex';
+    cardsCloneContainer.style.flexDirection = 'column';
+    cardsCloneContainer.style.gap = '8px';
+
+    visibleCards.forEach(card => {
+        const clone = card.cloneNode(true);
+        clone.style.background = '#0f172a';
+        clone.style.border = '1px solid rgba(255,255,255,0.12)';
+        cardsCloneContainer.appendChild(clone);
     });
 
-    const wrap = document.createElement('div');
-    wrap.style.background = 'rgba(15, 23, 42, 0.85)';
-    wrap.style.borderRadius = '18px';
-    wrap.style.border = '1px solid rgba(255, 255, 255, 0.08)';
-    wrap.style.padding = '10px';
-    wrap.style.height = 'auto'; 
-    wrap.style.overflow = 'visible'; 
-    wrap.appendChild(tableClone);
-
-    exportDiv.appendChild(wrap);
+    exportDiv.appendChild(cardsCloneContainer);
     document.body.appendChild(exportDiv);
 
     await new Promise(r => setTimeout(r, 100));
@@ -908,12 +962,9 @@ async function generateFullTableCanvas() {
     return canvas;
 }
 
-
-// ---------------- NATIVE SHARE HANDLER ----------------
-// Open/Close Modal
 function openShareModal() {
-    const tableWrap = document.getElementById('tableWrap');
-    if (!tableWrap) return alert("No table available to share.");
+    const listWrap = document.getElementById('tableWrap');
+    if (!listWrap) return alert("No transactions available to share.");
     document.getElementById('share-format-modal').classList.add('open');
 }
 
@@ -923,7 +974,6 @@ function closeShareModal(e) {
     }
 }
 
-// Master Share Execution Logic
 async function executeShare(format) {
     closeShareModal();
     setProcessing(true, `PREPARING ${format.toUpperCase()}...`);
@@ -935,24 +985,18 @@ async function executeShare(format) {
         let fileToShare, fileName;
 
         if (format === 'pdf') {
-            // Generate a custom-sized PDF based exactly on the canvas dimensions
-            // This prevents awkward page breaks cutting through rows
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF(canvas.width > canvas.height ? 'l' : 'p', 'pt', [canvas.width, canvas.height]);
             pdf.addImage(canvas.toDataURL('image/jpeg', 1.0), 'JPEG', 0, 0, canvas.width, canvas.height);
-            
             const pdfBlob = pdf.output('blob');
             fileName = `FCC_Statement_${new Date().toISOString().slice(0,10)}.pdf`;
             fileToShare = new File([pdfBlob], fileName, { type: 'application/pdf' });
-        } 
-        else {
-            // Image format (using PNG blob under the hood for cross-app compatibility, labeled as TIFF/PNG)
+        } else {
             const imgBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
             fileName = `FCC_Statement_${new Date().toISOString().slice(0,10)}.png`;
             fileToShare = new File([imgBlob], fileName, { type: 'image/png' });
         }
 
-        // Trigger Native Web Share
         if (navigator.share && navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
             await navigator.share({
                 files: [fileToShare],
@@ -960,7 +1004,6 @@ async function executeShare(format) {
                 text: 'Encrypted Finance Command Center Statement'
             });
         } else {
-            // Fallback for desktop or unsupported mobile browsers
             alert(`Native sharing not supported. Downloading ${format.toUpperCase()} instead.`);
             const link = document.createElement('a');
             link.download = fileName;
@@ -969,115 +1012,181 @@ async function executeShare(format) {
         }
     } catch(e) {
         console.error("Share Error:", e);
-        alert(`Failed to share ${format.toUpperCase()}.`);
+        alert(`Failed to share statement.`);
     } finally {
         setProcessing(false);
     }
 }
 
-// ---------------- COLUMN VISIBILITY MODAL LOGIC ----------------
-function openColumnSelector() {
+// ---------------- MASTER POPUP FILTER SYSTEM ----------------
+function openGlobalFilterModal() {
     if (!globalRawHeaders || globalRawHeaders.length === 0) return;
-    tempHiddenColumns = new Set(hiddenColumnNames); 
-    renderColHiderList();
-    document.getElementById('column-visibility-modal').classList.add('open');
+    
+    tempFilters = JSON.parse(JSON.stringify(activeFilters));
+    renderFilterHeaders();
+
+    if (!activeSelectedHeader || !globalRawHeaders.includes(activeSelectedHeader)) {
+        activeSelectedHeader = globalRawHeaders[0];
+    }
+
+    renderFilterOptionsForHeader(activeSelectedHeader);
+    document.getElementById('global-filter-modal').classList.add('open');
 }
 
-function renderColHiderList() {
-    const container = document.getElementById('column-options-container');
-    const total = globalRawHeaders.length;
-    const hiddenCount = tempHiddenColumns.size;
-    const visibleCount = total - hiddenCount;
+function closeFilterModal(e) {
+    if (!e || e.target.id === 'global-filter-modal' || e.target.tagName === 'BUTTON') {
+        document.getElementById('global-filter-modal').classList.remove('open');
+    }
+}
 
-    container.innerHTML = globalRawHeaders.map((h, i) => {
-        const normalized = h.toLowerCase().trim();
-        const isHidden = tempHiddenColumns.has(normalized);
-        
-        const boxStyle = isHidden 
-            ? "opacity: 0.5; border: 1px solid rgba(255,255,255,0.1); background: transparent;" 
-            : "border: 1px solid var(--primary); background: rgba(14,165,233,0.05);";
-        
-        const textStyle = isHidden ? "color: var(--text-muted);" : "color: var(--text); font-weight: 600;";
-        const statusBadge = isHidden 
-            ? `<span style="font-size:10px; color:var(--danger); display:flex; align-items:center; gap:4px;">hidden 🚫</span>` 
-            : `<span style="font-size:10px; color:var(--text-muted); display:flex; align-items:center; gap:4px;">visible 👁️</span>`;
-
+function renderFilterHeaders() {
+    const container = document.getElementById('filter-headers-list');
+    container.innerHTML = globalRawHeaders.map(h => {
+        const fieldName = h.toLowerCase().replace(/\s+/g, '_');
+        const count = (tempFilters[fieldName] || []).length;
+        const isActive = h === activeSelectedHeader;
         return `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px; border-radius: 8px; margin-bottom: 6px; cursor: pointer; transition: all 0.2s; ${boxStyle}" onclick="toggleTempColumn('${normalized}')">
-                <span style="${textStyle} font-size:12px;">${h}</span>
-                ${statusBadge}
+            <div class="filter-header-nav-item ${isActive ? 'active' : ''}" onclick="selectFilterHeader('${h}')">
+                <span>${h}</span>
+                ${count > 0 ? `<span class="active-filter-badge">${count}</span>` : ''}
             </div>
         `;
     }).join('');
-
-    document.getElementById('col-hider-footer').innerText = `${visibleCount} of ${total} visible`;
 }
 
-function toggleTempColumn(colName) {
-    if (tempHiddenColumns.has(colName)) {
-        tempHiddenColumns.delete(colName);
-    } else {
-        tempHiddenColumns.add(colName);
-    }
-    renderColHiderList();
+function selectFilterHeader(headerName) {
+    activeSelectedHeader = headerName;
+    renderFilterHeaders();
+    document.getElementById('filter-elements-search').value = "";
+    renderFilterOptionsForHeader(headerName);
 }
 
-function colHiderSetAll(showAll) {
-    if (showAll) {
-        tempHiddenColumns.clear();
-    } else {
-        globalRawHeaders.forEach(h => tempHiddenColumns.add(h.toLowerCase().trim()));
-    }
-    renderColHiderList();
-}
+function renderFilterOptionsForHeader(headerName) {
+    const fieldName = headerName.toLowerCase().replace(/\s+/g, '_');
+    const colIndex = globalRawHeaders.indexOf(headerName);
+    const isDateColumn = /date/i.test(headerName);
+    const valueSet = new Set();
+    const searchQuery = document.getElementById('tableFilter').value.toLowerCase().trim();
 
-function resetColHider() {
-    tempHiddenColumns = new Set(hiddenColumnNames); 
-    renderColHiderList();
-}
+    if (colIndex !== -1) {
+        globalRawRows.forEach(row => {
+            let passes = true;
+            if (searchQuery) {
+                const matches = row.some((cell, i) => String(getFormattedCellValue(row, i, globalRawHeaders)).toLowerCase().includes(searchQuery));
+                if (!matches) passes = false;
+            }
 
-function applyColHider() {
-    hiddenColumnNames = new Set(tempHiddenColumns); 
-    applyColumnVisibility();
-    closeColumnModal();
-}
+            if (passes) {
+                for (const f in tempFilters) {
+                    if (f === fieldName) continue;
+                    const vals = tempFilters[f];
+                    if (!vals || vals.length === 0) continue;
+                    const otherColIndex = globalRawHeaders.findIndex(h => h.toLowerCase().replace(/\s+/g, '_') === f);
+                    if (otherColIndex !== -1) {
+                        const formatted = getFormattedCellValue(row, otherColIndex, globalRawHeaders);
+                        if (!vals.includes(normalizeValue(formatted))) {
+                            passes = false;
+                            break;
+                        }
+                    }
+                }
+            }
 
-function closeColumnModal(e) {
-    if (!e || e.target.id === 'column-visibility-modal' || e.target.tagName === 'BUTTON') {
-        document.getElementById('column-visibility-modal').classList.remove('open');
-    }
-}
-
-function applyColumnVisibility() {
-    const table = document.getElementById('mainDataTable');
-    if (!table) return;
-    
-    const hiddenIndices = new Set();
-    globalRawHeaders.forEach((h, i) => {
-        if (hiddenColumnNames.has(h.toLowerCase().trim())) {
-            hiddenIndices.add(i);
-        }
-    });
-
-    const rows = table.querySelectorAll('tr');
-    rows.forEach(row => {
-        Array.from(row.children).forEach((cell, i) => {
-            if (hiddenIndices.has(i)) {
-                cell.style.display = 'none';
-            } else {
-                cell.style.display = '';
+            if (passes) {
+                let rawVal = (row[colIndex] ?? "").toString().trim();
+                if (rawVal !== "") valueSet.add(rawVal);
             }
         });
+    }
+
+    const sorted = Array.from(valueSet).sort((a, b) => {
+        if (isDateColumn) return parseDateValue(a) - parseDateValue(b);
+        if (!isNaN(a) && !isNaN(b)) return parseFloat(a) - parseFloat(b);
+        return a.localeCompare(b);
     });
 
-    const total = globalRawHeaders.length;
-    const visible = total - hiddenColumnNames.size;
-    const badge = document.getElementById('col-count-badge');
-    if(badge) badge.innerText = visible === total ? "All" : visible;
+    const selected = tempFilters[fieldName] || [];
+    const container = document.getElementById('modal-options-container');
+
+    container.innerHTML = sorted.map(val => `
+        <div class="filter-option ${selected.includes(normalizeValue(val)) ? 'selected' : ''}" data-value="${val}" onclick="toggleOptionElement(this, '${fieldName}')">
+            <span>${val}</span>
+        </div>
+    `).join('');
 }
 
-// -------------------------------------------------------------
+function toggleOptionElement(el, fieldName) {
+    el.classList.toggle('selected');
+    const rawVal = el.getAttribute('data-value');
+    const norm = normalizeValue(rawVal);
+    
+    if (!tempFilters[fieldName]) tempFilters[fieldName] = [];
 
+    if (el.classList.contains('selected')) {
+        if (!tempFilters[fieldName].includes(norm)) tempFilters[fieldName].push(norm);
+    } else {
+        tempFilters[fieldName] = tempFilters[fieldName].filter(v => v !== norm);
+    }
+    renderFilterHeaders();
+}
+
+function filterOptionElements(q) {
+    q = q.toLowerCase().trim();
+    const options = document.querySelectorAll('#modal-options-container .filter-option');
+    options.forEach(opt => {
+        const val = opt.getAttribute('data-value').toLowerCase();
+        opt.style.display = (!q || val.includes(q)) ? 'flex' : 'none';
+    });
+}
+
+function selectAllCurrentModalOptions() {
+    if (!activeSelectedHeader) return;
+    const fieldName = activeSelectedHeader.toLowerCase().replace(/\s+/g, '_');
+    const options = document.querySelectorAll('#modal-options-container .filter-option');
+    if (!tempFilters[fieldName]) tempFilters[fieldName] = [];
+    
+    options.forEach(opt => {
+        if (opt.style.display !== 'none') {
+            opt.classList.add('selected');
+            const norm = normalizeValue(opt.getAttribute('data-value'));
+            if (!tempFilters[fieldName].includes(norm)) tempFilters[fieldName].push(norm);
+        }
+    });
+    renderFilterHeaders();
+}
+
+function clearCurrentModalFilter() {
+    if (!activeSelectedHeader) return;
+    const fieldName = activeSelectedHeader.toLowerCase().replace(/\s+/g, '_');
+    tempFilters[fieldName] = [];
+    document.querySelectorAll('#modal-options-container .filter-option').forEach(opt => opt.classList.remove('selected'));
+    renderFilterHeaders();
+}
+
+function confirmModalFilter() {
+    activeFilters = JSON.parse(JSON.stringify(tempFilters));
+    updateActiveFilterBadge();
+    applyFilters();
+    closeFilterModal();
+}
+
+function updateActiveFilterBadge() {
+    let totalCount = 0;
+    for (const f in activeFilters) {
+        if (activeFilters[f] && activeFilters[f].length > 0) totalCount += activeFilters[f].length;
+    }
+    const badge = document.getElementById('active-filter-badge');
+    if (badge) {
+        if (totalCount > 0) {
+            badge.style.display = "inline-block";
+            badge.innerText = totalCount;
+        } else {
+            badge.style.display = "none";
+        }
+    }
+}
+
+// ---------------- DASHBOARD TELEMETRY & VIEW ----------------
 function changeOverviewMonth(monthKey) {
     activeOverviewMonthKey = monthKey;
     renderHomeOverview();
@@ -1186,10 +1295,7 @@ function renderHomeOverview() {
 
                 const isExcluded = mode.includes("SELF TRANSFER") || mode.includes("INTERNAL TRANSFER");
 
-                if (credit > 0 && !isExcluded) {
-                    totalMonthInflow += credit;
-                }
-
+                if (credit > 0 && !isExcluded) totalMonthInflow += credit;
                 if (debit > 0 && !isExcluded) {
                     totalMonthOutflow += debit;
                     modeAggregates[mode] = (modeAggregates[mode] || 0) + debit;
@@ -1382,10 +1488,7 @@ function renderHomeOverview() {
                 `;
             }
         },
-        plugins: {
-            legend: { display: false },
-            tooltip: { enabled: false }
-        }
+        plugins: { legend: { display: false }, tooltip: { enabled: false } }
     });
 
     const ctx1 = document.getElementById('expenseDonutChart');
@@ -1523,12 +1626,10 @@ function returnToDashboard() {
     renderHomeOverview();
 }
 
-
 function clearDisplayArea() {
     const area = document.getElementById('displayArea');
     area.innerHTML = '';
 }
-
 
 function normalizeValue(val) {
     return (val ?? "").toString().toLowerCase().replace(/[₹,\s]/g, '').split('.')[0].trim();
@@ -1542,7 +1643,7 @@ function parseDateValue(val) {
 
     const parts = cleaned.split("-");
     if (parts.length === 3) {
-        const months = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Sep:8, Oct:9, Nov:10, Dec:11 };
+        const months = { Jan:0, Feb:1, Mar:2, Apr:3, May:4, Jun:5, Jul:6, Aug:7, Nov:10, Dec:11, Sep:8, Oct:9 };
         const day = parseInt(parts[0], 10);
         const month = months[parts[1]];
         const year = parseInt(parts[2], 10);
@@ -2030,7 +2131,6 @@ async function fetchOpeningBalance(accountName) {
     return row ? (parseFloat(row[1]) || 0) : 0; 
 }
 
-
 function injectRunningBalance(headers, rows, openingBalance) {
     const depositIdx = headers.findIndex(h => /deposit/i.test(h));
     const withdrawnIdx = headers.findIndex(h => /withdrawn/i.test(h));
@@ -2126,6 +2226,7 @@ function formatINR(value) {
     return "₹" + num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+// ---------------- TRANSACTION CARD VIEW RENDERER ----------------
 function renderTable(headers, rows) {
     try {
         toggleDashboard(false);
@@ -2136,78 +2237,356 @@ function renderTable(headers, rows) {
         document.getElementById('tableFilter').value = "";
         
         activeFilters = {};
+        if (typeof updateActiveFilterBadge === 'function') updateActiveFilterBadge();
+        
         globalRawHeaders = headers; 
         globalRawRows = rows; 
         
         rows = sortRowsByDate(headers, rows); 
         
-        const isRegistry = currentTableMode === 'registry';
-        let idColIdx = headers.findIndex(h => /id|ref_id|reference/i.test(h));
+        const isSelfTransferSheet = selectedSheetName === "Self Transfer";
+        const isCashEntries = selectedSheetName === "Cash Entries";
+
+        const metricsBar = document.querySelector('.metrics-bar');
+        if (metricsBar) {
+            metricsBar.style.display = isSelfTransferSheet ? 'none' : 'grid';
+        }
+
+        const headLower = headers.map(h => h.toLowerCase());
+        const narrationIdx = headLower.findIndex(h => /narration|description|details|particulars/i.test(h));
+        const accountIdx = headLower.findIndex(h => /from\/\s*to|payment\s*account|account|payment\s*mode|bank/i.test(h));
+        const withdrawnIdx = headLower.findIndex(h => /withdrawn|given|debit|paid|expense/i.test(h));
+        const depositIdx = headLower.findIndex(h => /deposit|received|credit|incoming/i.test(h));
+        const amountIdx = headLower.findIndex(h => /amount|^amt$/i.test(h));
+        const purposeIdx = headLower.findIndex(h => /^purpose$|purpose|reason|category/i.test(h));
+        
+        const fromAccountIdx = headLower.findIndex(h => /from account/i.test(h));
+        const toAccountIdx = headLower.findIndex(h => /to account/i.test(h));
+
+        let idColIdx = headLower.findIndex(h => /id|ref_id|reference/i.test(h));
         if (idColIdx === -1) idColIdx = headers.length - 1;
+
+        // --- PRECISE ROW GROUPING & PAIRING ---
+        let processedRows = [];
+        
+        if (isSelfTransferSheet) {
+            let paired = new Array(rows.length).fill(false);
+            
+            for (let i = 0; i < rows.length; i++) {
+                if (paired[i]) continue;
+                let currentRow = rows[i];
+                let curNar = narrationIdx !== -1 ? String(currentRow[narrationIdx]) : "";
+                let group = [currentRow];
+                paired[i] = true;
+
+                if (curNar.includes("(From)") || curNar.includes("(To)")) {
+                    let baseCleanNar = curNar.replace(/\s*\((To|From)\)\s*$/i, "").trim();
+                    let targetTag = curNar.includes("(From)") ? "(To)" : "(From)";
+
+                    for (let j = i + 1; j < rows.length; j++) {
+                        if (paired[j]) continue;
+                        let nextRow = rows[j];
+                        let nextNar = narrationIdx !== -1 ? String(nextRow[narrationIdx]) : "";
+                        let nextCleanNar = nextNar.replace(/\s*\((To|From)\)\s*$/i, "").trim();
+
+                        if (nextCleanNar === baseCleanNar && nextNar.includes(targetTag)) {
+                            group.push(nextRow);
+                            paired[j] = true;
+                            break;
+                        }
+                    }
+                }
+                
+                let primary = group.find(r => String(r[narrationIdx] || "").includes("(From)")) || group[0];
+                processedRows.push({ originalRows: group, row: primary });
+            }
+        } else {
+            let groupMap = new Map();
+            rows.forEach(row => {
+                let rawRef = String(row[idColIdx] || "").trim().toUpperCase();
+                if (!rawRef || rawRef === "-") {
+                    processedRows.push({ originalRows: [row], row: row });
+                    return;
+                }
+                if (!groupMap.has(rawRef)) groupMap.set(rawRef, []);
+                groupMap.get(rawRef).push(row);
+            });
+
+            groupMap.forEach((matchedRows) => {
+                let primaryRow = [...matchedRows].sort((a, b) => {
+                    let amtA = withdrawnIdx !== -1 ? parseFloat(String(a[withdrawnIdx]).replace(/[^0-9.-]/g,"")) || 0 : 0;
+                    let amtB = withdrawnIdx !== -1 ? parseFloat(String(b[withdrawnIdx]).replace(/[^0-9.-]/g,"")) || 0 : 0;
+                    return Math.abs(amtB) - Math.abs(amtA);
+                })[0];
+                processedRows.push({ originalRows: matchedRows, row: primaryRow });
+            });
+        }
+        // -------------------------------------------------------------
+
+        let cashNarrationMap = new Map();
+        if (isCashEntries && globalDataCache && globalDataCache.sheets) {
+            const searchSheets = ["Full Statement", "Monthly Transaction"];
+            searchSheets.forEach(sheetName => {
+                if (globalDataCache.sheets[sheetName]) {
+                    const sData = globalDataCache.sheets[sheetName];
+                    const sHeaders = sData.headers.map(h => h.toLowerCase());
+                    const sRefIdx = sHeaders.findIndex(h => /id|ref_id|reference/i.test(h));
+                    const sNarIdx = sHeaders.findIndex(h => /narration|description|details|particulars/i.test(h));
+                    
+                    if (sRefIdx !== -1 && sNarIdx !== -1) {
+                        sData.rows.forEach(r => {
+                            const ref = String(r[sRefIdx] || "").trim().toUpperCase();
+                            const nar = String(r[sNarIdx] || "").trim();
+                            if (ref && nar && nar !== "-" && nar !== "") cashNarrationMap.set(ref, nar);
+                        });
+                    }
+                }
+            });
+        }
 
         let html = `
           <div class='sheet-card'>
             <div class='table-wrap' id="tableWrap">
-               <table id="mainDataTable">
-                    <thead>
-                        <tr>
-                            ${headers.map((h) => {
-                                const fieldName = h.toLowerCase().replace(/\s+/g, '_');
-                                return `
-                                <th onclick="openFilterModal('${fieldName}', '${h}')">
-                                    ${h} ▼
-                                </th>`;
-                            }).join('')}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows.map(row => {
-                            const rawId = row[idColIdx];
-                            const rowId = rawId ? String(rawId).trim() : "";
-                            return `
-                            <tr class="data-row" data-id="${rowId}" onclick="handleRowClick(this)">
-                                ${row.map((cell, idx) => {
-                                    const headerName = headers[idx].toLowerCase();
-                                    const fieldName = headerName.replace(/\s+/g, '_');
-                                    const isIdCol = idx === idColIdx;
-                                    const isDate = /date/i.test(headers[idx]);
+                <div class="cards-list">
+                    ${processedRows.map((item, rIdx) => {
+                        const row = item.row;
+                        const rawId = row[idColIdx];
+                        const rowId = rawId ? String(rawId).trim() : `row-${rIdx}`;
+                        const normalizedLookupId = rawId.toUpperCase();
 
-                                    const isInflow = /deposit|received|credit|incoming/.test(headerName);
-                                    const isOutflow = /withdrawn|given|debit|paid|expense/.test(headerName);
-                                    const isRunningBalance = headerName.includes("running balance");
-                                    const isAmount = isInflow || isOutflow || headerName.includes("total") || (headerName.includes("balance") && !isRunningBalance);
+                        let narrationVal = (narrationIdx !== -1 && row[narrationIdx]) ? String(row[narrationIdx]).trim() : "Transaction";
+                        narrationVal = narrationVal.replace(/\s*\((To|From)\)\s*$/i, "").trim();
 
-                                    let content = cell ?? '';
-                                    if (isAmount) content = formatINR(cell);
-                                    if (isIdCol && !isRegistry) content = `<span class="id-badge">${cell}</span>`;
-                                    else if (isDate) content = formatTacticalDate(cell);
+                        let accountVal = (accountIdx !== -1 && row[accountIdx]) ? String(row[accountIdx]).trim() : "";
 
-                                    let amountStyle = "";
-                                    if (isRunningBalance) amountStyle = "color:var(--ledger); font-weight:800;";
-                                    else if (isInflow) amountStyle = "color:var(--success); font-weight:700;";
-                                    else if (isOutflow) amountStyle = "color:var(--danger); font-weight:700;";
+                        // Check Purpose to see if it is a Self Transfer irrespective of sheet
+                        let purposeVal = "";
+                        if (purposeIdx !== -1 && row[purposeIdx]) {
+                            purposeVal = String(row[purposeIdx]).trim().toLowerCase();
+                        }
+                        if (!purposeVal && item.originalRows) {
+                            for (const subRow of item.originalRows) {
+                                let p = purposeIdx !== -1 ? String(subRow[purposeIdx] || "").trim().toLowerCase() : "";
+                                if (p) { purposeVal = p; break; }
+                            }
+                        }
+                        const hasSelfTransferPurpose = isSelfTransferSheet || purposeVal.includes("self transfer") || purposeVal.includes("internal transfer");
 
-                                    return `<td data-field="${fieldName}" style="${amountStyle}">${content}</td>`;
+                        let displayAmount = "₹0.00";
+                        let amountClass = "neutral";
+                        let rawInflow = 0;
+                        let rawOutflow = 0;
+                        let accountFlowSubtitle = "";
+
+                        if (hasSelfTransferPurpose) {
+                            let fromAcc = "";
+                            let toAcc = "";
+                            
+                            item.originalRows.forEach(subRow => {
+                                let subNar = narrationIdx !== -1 ? String(subRow[narrationIdx]) : "";
+                                if (subNar.includes("(From)")) {
+                                    if (fromAccountIdx !== -1 && subRow[fromAccountIdx]) fromAcc = String(subRow[fromAccountIdx]).trim();
+                                }
+                                if (subNar.includes("(To)")) {
+                                    if (toAccountIdx !== -1 && subRow[toAccountIdx]) toAcc = String(subRow[toAccountIdx]).trim();
+                                }
+                            });
+
+                            if (!fromAcc && fromAccountIdx !== -1 && row[fromAccountIdx]) fromAcc = String(row[fromAccountIdx]).trim();
+                            if (!toAcc && toAccountIdx !== -1 && row[toAccountIdx]) toAcc = String(row[toAccountIdx]).trim();
+
+                            if (fromAcc && toAcc && fromAcc !== "-" && toAcc !== "-") {
+                                accountFlowSubtitle = `<span style="color:var(--text);">${fromAcc}</span> <span style="color:var(--primary); margin:0 4px;">➔</span> <span style="color:var(--text);">${toAcc}</span>`;
+                            } else {
+                                accountFlowSubtitle = accountVal ? `💳 ${accountVal}` : "";
+                            }
+
+                            let amtVal = amountIdx !== -1 ? parseFloat(String(row[amountIdx]).replace(/[^0-9.-]/g, "")) || 0 : 0;
+                            if (amtVal === 0) {
+                                let dVal = withdrawnIdx !== -1 ? parseFloat((row[withdrawnIdx] || "0").toString().replace(/[^0-9.-]/g, "")) || 0 : 0;
+                                let cVal = depositIdx !== -1 ? parseFloat((row[depositIdx] || "0").toString().replace(/[^0-9.-]/g, "")) || 0 : 0;
+                                amtVal = dVal > 0 ? dVal : cVal;
+                            }
+                            displayAmount = formatINR(amtVal);
+                            amountClass = "transfer"; // Yellow color
+
+                        } else if (isCashEntries) {
+                            let calculatedCash = 0;
+                            const validDenoms = [500, 200, 100, 50, 20, 10, 5, 2, 1];
+                            
+                            headers.forEach((headerName, cIdx) => {
+                                const denom = parseInt(headerName, 10);
+                                if (!isNaN(denom) && validDenoms.includes(denom)) {
+                                    const pieces = parseInt(row[cIdx], 10);
+                                    if (!isNaN(pieces)) calculatedCash += denom * pieces;
+                                }
+                            });
+
+                            let fetchedNarration = cashNarrationMap.get(normalizedLookupId);
+                            if (!fetchedNarration && narrationVal !== "Transaction" && narrationVal !== "-" && narrationVal !== "") {
+                                fetchedNarration = narrationVal;
+                            }
+
+                            if (calculatedCash < 0) {
+                                rawOutflow = Math.abs(calculatedCash);
+                                displayAmount = formatINR(rawOutflow);
+                                amountClass = "outflow"; 
+                                narrationVal = fetchedNarration || "Cash Outflow";
+                            } else {
+                                rawInflow = calculatedCash;
+                                displayAmount = formatINR(rawInflow);
+                                amountClass = "inflow"; 
+                                narrationVal = fetchedNarration || (calculatedCash === 0 ? "Cash Entry" : "Cash Inflow");
+                            }
+                            
+                            if (!accountVal || accountVal === "-") accountVal = "Physical Cash";
+                            accountFlowSubtitle = `💵 ${accountVal}`;
+
+                        } else {
+                            let totalDebit = 0;
+                            let totalCredit = 0;
+
+                            item.originalRows.forEach(subRow => {
+                                let dVal = withdrawnIdx !== -1 ? parseFloat((subRow[withdrawnIdx] || "0").toString().replace(/[^0-9.-]/g, "")) || 0 : 0;
+                                let cVal = depositIdx !== -1 ? parseFloat((subRow[depositIdx] || "0").toString().replace(/[^0-9.-]/g, "")) || 0 : 0;
+                                totalDebit += dVal;
+                                totalCredit += cVal;
+                            });
+
+                            if (totalDebit > 0) {
+                                displayAmount = "-" + formatINR(totalDebit);
+                                amountClass = "outflow";
+                                rawOutflow = totalDebit;
+                            } else if (totalCredit > 0) {
+                                displayAmount = "+" + formatINR(totalCredit);
+                                amountClass = "inflow";
+                                rawInflow = totalCredit;
+                            } else {
+                                displayAmount = formatINR(0);
+                                amountClass = "neutral";
+                            }
+                            accountFlowSubtitle = accountVal ? `💳 ${accountVal}` : "";
+                        }
+
+                        const searchPayload = item.originalRows.map(r => r.map((cell, idx) => getFormattedCellValue(r, idx, headers)).join(' ')).join(' ').toLowerCase();
+
+                        return `
+                        <div class="tx-card" 
+                             data-id="${rowId}" 
+                             data-inflow="${rawInflow}" 
+                             data-outflow="${rawOutflow}" 
+                             data-search="${searchPayload}"
+                             onclick="handleCardSelection(this)">
+                             
+                            <div class="tx-card-main">
+                                <div class="tx-card-left">
+                                    <div class="tx-narration">${narrationVal}</div>
+                                    <div class="tx-account">${accountFlowSubtitle}</div>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <div class="tx-amount ${amountClass}">
+                                        ${displayAmount}
+                                    </div>
+                                    <span class="tx-chevron" onclick="toggleCardExpansion(event, this)">▼</span>
+                                </div>
+                            </div>
+
+                            <div class="tx-expanded-body">
+                                ${headers.map((h, cIdx) => {
+                                    const fieldName = h.toLowerCase().replace(/\s+/g, '_');
+                                    
+                                    let displayVal = '-';
+                                    if (hasSelfTransferPurpose) {
+                                        let fromVal = '-';
+                                        let toVal = '-';
+                                        item.originalRows.forEach(subRow => {
+                                            let subNar = narrationIdx !== -1 ? String(subRow[narrationIdx]) : "";
+                                            let val = getFormattedCellValue(subRow, cIdx, headers);
+                                            if (cIdx === narrationIdx && val) {
+                                                val = String(val).replace(/\s*\((To|From)\)\s*$/i, "").trim();
+                                            }
+                                            if (val && val !== '-' && val !== '') {
+                                                if (subNar.includes("(From)")) fromVal = val;
+                                                else if (subNar.includes("(To)")) toVal = val;
+                                                else {
+                                                    if (fromVal === '-') fromVal = val;
+                                                    else if (toVal === '-') toVal = val;
+                                                }
+                                            }
+                                        });
+
+                                        if (fromVal !== '-' && toVal !== '-' && fromVal !== toVal) {
+                                            displayVal = `${fromVal} / ${toVal}`;
+                                        } else {
+                                            displayVal = fromVal !== '-' ? fromVal : (toVal !== '-' ? toVal : getFormattedCellValue(row, cIdx, headers));
+                                        }
+                                    } else {
+                                        let uniqueVals = [];
+                                        item.originalRows.forEach(subRow => {
+                                            let val = getFormattedCellValue(subRow, cIdx, headers);
+                                            if (cIdx === narrationIdx && val) {
+                                                val = String(val).replace(/\s*\((To|From)\)\s*$/i, "").trim();
+                                            }
+                                            if (val && val !== '-' && val !== '') {
+                                                if (!uniqueVals.includes(val)) uniqueVals.push(val);
+                                            }
+                                        });
+                                        displayVal = uniqueVals.length > 0 ? uniqueVals.join(' / ') : '-';
+                                    }
+
+                                    return `
+                                        <div class="tx-detail-row" data-field="${fieldName}" data-val="${normalizeValue(displayVal)}">
+                                            <span class="tx-detail-label">${h}</span>
+                                            <span class="tx-detail-value">${displayVal}</span>
+                                        </div>
+                                    `;
                                 }).join('')}
-                            </tr>`;
-                        }).join('')}
-                    </tbody>
-               </table>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
             </div>
-        </div>`;
+        `;
 
         document.getElementById('displayArea').innerHTML = html;
-        applyColumnVisibility(); 
-        recalculateMetricsFromVisible();
+        
+        if (!isSelfTransferSheet && typeof recalculateMetricsFromVisible === 'function') {
+            recalculateMetricsFromVisible();
+        }
     } catch(err) {
-        console.error("Render Table Error:", err);
+        console.error("Render Card View Error:", err);
         throw err; 
     }
 }
 
-function handleRowClick(rowElement) {
-    rowElement.classList.toggle('selected');
-    recalculateMetricsFromSelected();
+function handleCardSelection(cardElement) {
+    // Tapping anywhere on the card body selects/highlights it for calculation
+    cardElement.classList.toggle('selected');
+    
+    if (typeof recalculateMetricsFromSelected === 'function') {
+        recalculateMetricsFromSelected();
+    }
+}
+
+function toggleCardExpansion(event, chevronElement) {
+    // Prevents selecting the card when tapping the dropdown arrow
+    event.stopPropagation();
+    
+    const cardElement = chevronElement.closest('.tx-card');
+    cardElement.classList.toggle('expanded');
+}
+
+function handleCardClick(cardElement) {
+    // 1. Toggle expansion to show/hide details
+    cardElement.classList.toggle('expanded');
+    
+    // 2. Toggle the selected state to highlight the card
+    cardElement.classList.toggle('selected');
+    
+    // 3. Recalculate metrics for multi-select calculation
+    if (typeof recalculateMetricsFromSelected === 'function') {
+        recalculateMetricsFromSelected();
+    }
 }
 
 function getFormattedCellValue(row, idx, headers) {
@@ -2224,163 +2603,53 @@ function getFormattedCellValue(row, idx, headers) {
     return content;
 }
 
-function openFilterModal(fieldName, titleName) {
-    activeModalField = fieldName;
-    document.getElementById('filter-modal-title').innerText = `Filter: ${titleName}`;
-    document.getElementById('filter-search-input').value = "";
-    
-    const colIndex = globalRawHeaders.findIndex(h => h.toLowerCase().replace(/\s+/g, '_') === fieldName);
-    const isDateColumn = /date/i.test(globalRawHeaders[colIndex] || "");
-    
-    const valueSet = new Set();
-    const searchQuery = document.getElementById('tableFilter').value.toLowerCase().trim();
-
-    if (colIndex !== -1) {
-        globalRawRows.forEach(row => {
-            let passesFilters = true;
-
-            if (searchQuery) {
-                const rowMatchesSearch = row.some((cell, i) => {
-                    return String(getFormattedCellValue(row, i, globalRawHeaders)).toLowerCase().includes(searchQuery);
-                });
-                if (!rowMatchesSearch) passesFilters = false;
-            }
-
-            if (passesFilters) {
-                for (const filterField in activeFilters) {
-                    if (filterField === fieldName) continue; 
-                    
-                    const selectedValues = activeFilters[filterField];
-                    if (!selectedValues || selectedValues.length === 0) continue;
-                    
-                    const otherColIndex = globalRawHeaders.findIndex(h => h.toLowerCase().replace(/\s+/g, '_') === filterField);
-                    if (otherColIndex !== -1) {
-                        const formattedVal = getFormattedCellValue(row, otherColIndex, globalRawHeaders);
-                        if (!selectedValues.includes(normalizeValue(formattedVal))) {
-                            passesFilters = false;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (passesFilters) {
-                let rawValue = (row[colIndex] ?? "").toString().trim();
-                if (rawValue !== "") valueSet.add(rawValue);
-            }
-        });
-    }
-
-    const sorted = Array.from(valueSet).sort((a, b) => {
-        if (isDateColumn) {
-            return parseDateValue(a) - parseDateValue(b);
-        }
-        if (!isNaN(a) && !isNaN(b)) return parseFloat(a) - parseFloat(b);
-        return a.localeCompare(b);
-    });
-
-    const selected = activeFilters[fieldName] || [];
-    const container = document.getElementById('modal-options-container');
-    
-    container.innerHTML = sorted.map(val => `
-        <div class="filter-option ${selected.includes(normalizeValue(val)) ? 'selected' : ''}" data-value="${val}" onclick="toggleModalOptionChip(this)">
-            <span>${val}</span>
-        </div>
-    `).join('');
-
-    document.getElementById('global-filter-modal').classList.add('open');
-}
-
-function closeFilterModal(e) {
-    if (!e || e.target.id === 'global-filter-modal' || e.target.tagName === 'BUTTON') {
-        document.getElementById('global-filter-modal').classList.remove('open');
-    }
-}
-
-function filterColumnOptions(query) {
-    query = query.toLowerCase().trim();
-    const options = document.querySelectorAll('#modal-options-container .filter-option');
-    options.forEach(opt => {
-        const val = opt.getAttribute('data-value').toLowerCase();
-        opt.style.display = (!query || val.includes(query)) ? 'flex' : 'none';
-    });
-}
-
-function toggleModalOptionChip(element) {
-    element.classList.toggle('selected');
-}
-
-function selectAllModalOptions() {
-    const options = document.querySelectorAll('#modal-options-container .filter-option');
-    options.forEach(opt => {
-        if (opt.style.display !== 'none') {
-            opt.classList.add('selected');
-        }
-    });
-}
-
-function confirmModalFilter() {
-    if (!activeModalField) return;
-    const selectedChips = document.querySelectorAll('#modal-options-container .filter-option.selected');
-    const allChips = document.querySelectorAll('#modal-options-container .filter-option');
-
-    if (selectedChips.length === 0 || selectedChips.length === allChips.length) {
-        activeFilters[activeModalField] = [];
-    } else {
-        activeFilters[activeModalField] = Array.from(selectedChips).map(c => normalizeValue(c.getAttribute('data-value')));
-    }
-
-    applyFilters();
-    closeFilterModal();
-}
-
-function clearModalFilter() {
-    if (!activeModalField) return;
-    activeFilters[activeModalField] = [];
-    applyFilters();
-    closeFilterModal();
-}
-
 function resetAllFilters() {
     activeFilters = {};
+    tempFilters = {};
+    updateActiveFilterBadge();
     document.getElementById('tableFilter').value = "";
     applyFilters();
 }
 
 function applyFilters() {
     const query = document.getElementById('tableFilter').value.toLowerCase().trim();
-    const rows = Array.from(document.querySelectorAll('.data-row'));
+    const cards = Array.from(document.querySelectorAll('.tx-card'));
 
-    rows.forEach(row => {
-        const cells = Array.from(row.querySelectorAll('td'));
-        const matchesSearch = !query || cells.some(c => c.textContent.toLowerCase().includes(query));
+    cards.forEach(card => {
+        const searchText = card.getAttribute('data-search') || "";
+        const matchesSearch = !query || searchText.includes(query);
         let matchesFilters = true;
 
         for (const field in activeFilters) {
             const selectedValues = activeFilters[field];
             if (!selectedValues || selectedValues.length === 0) continue;
-            const cell = row.querySelector(`td[data-field="${field}"]`);
-            if (!cell || !selectedValues.includes(normalizeValue(cell.textContent))) {
-                matchesFilters = false; break;
+            
+            const fieldEl = card.querySelector(`.tx-detail-row[data-field="${field}"]`);
+            if (!fieldEl) {
+                matchesFilters = false;
+                break;
+            }
+            const itemVal = fieldEl.getAttribute('data-val');
+            if (!selectedValues.includes(itemVal)) {
+                matchesFilters = false;
+                break;
             }
         }
 
-        row.style.display = (matchesSearch && matchesFilters) ? "" : "none";
+        card.style.display = (matchesSearch && matchesFilters) ? "" : "none";
     });
 
     recalculateMetricsFromVisible();
 }
 
 function recalculateMetricsFromVisible() {
-    const rows = Array.from(document.querySelectorAll('#mainDataTable tbody tr'));
+    const cards = Array.from(document.querySelectorAll('.tx-card'));
     let totalInflow = 0, totalOutflow = 0;
 
-    rows.forEach(row => {
-        if (row.style.display !== 'none') {
-            const inflowCell = row.querySelector('td[style*="color:var(--success)"]');
-            const outflowCell = row.querySelector('td[style*="color:var(--danger)"]');
-            if (inflowCell) totalInflow += parseFloat(inflowCell.innerText.replace(/[^0-9.-]/g, "")) || 0;
-            if (outflowCell) totalOutflow += parseFloat(outflowCell.innerText.replace(/[^0-9.-]/g, "")) || 0;
+    cards.forEach(card => {
+        if (card.style.display !== 'none') {
+            totalInflow += parseFloat(card.getAttribute('data-inflow') || "0");
+            totalOutflow += parseFloat(card.getAttribute('data-outflow') || "0");
         }
     });
 
@@ -2388,25 +2657,24 @@ function recalculateMetricsFromVisible() {
 }
 
 function recalculateMetricsFromSelected() {
-    const selectedRows = document.querySelectorAll('.data-row.selected');
-    if (selectedRows.length === 0) return recalculateMetricsFromVisible();
+    const selectedCards = document.querySelectorAll('.tx-card.selected');
+    if (selectedCards.length === 0) return recalculateMetricsFromVisible();
     let totalInflow = 0, totalOutflow = 0;
 
-    selectedRows.forEach(row => {
-        const inflowCell = row.querySelector('td[style*="color:var(--success)"]');
-        const outflowCell = row.querySelector('td[style*="color:var(--danger)"]');
-        if (inflowCell) totalInflow += parseFloat(inflowCell.innerText.replace(/[^0-9.-]/g, "")) || 0;
-        if (outflowCell) totalOutflow += parseFloat(outflowCell.innerText.replace(/[^0-9.-]/g, "")) || 0;
+    selectedCards.forEach(card => {
+        totalInflow += parseFloat(card.getAttribute('data-inflow') || "0");
+        totalOutflow += parseFloat(card.getAttribute('data-outflow') || "0");
     });
 
     updateMetricsUI(totalInflow, totalOutflow);
 }
 
+// ---------------- CONTEXT & ASSOCIATED RECORDS ----------------
 async function fetchAssociated() {
     if (!globalDataCache) return;
     toggleDashboard(false);
 
-    const ids = Array.from(document.querySelectorAll('.data-row.selected')).map(r => r.getAttribute('data-id'));
+    const ids = Array.from(document.querySelectorAll('.tx-card.selected')).map(r => r.getAttribute('data-id'));
     if (!ids.length) return;
     setProcessing(true, "TRACING SYSTEM REFERENCES...");
 
@@ -2437,22 +2705,20 @@ async function fetchAssociated() {
                             MODULE: ${sheetName.toUpperCase()} (${sheet.rows.length})
                         </div>
                         <div class="table-wrap">
-                            <table>
-                                <thead>
-                                    <tr>${sheet.headers.map(h => `<th>${h}</th>`).join('')}</tr>
-                                </thead>
-                                <tbody>
-                                    ${sheet.rows.map(r => `
-                                        <tr>${r.map((cell, idx) => {
-                                                const isDate = /date/i.test(sheet.headers[idx]);
-                                                const isAmount = /amount|total|balance|deposit|withdrawn/i.test(sheet.headers[idx]);
-                                                return `<td style="${isAmount ? 'font-family:\'JetBrains Mono\'; font-weight:700; color:var(--gold);' : ''}">
-                                                            ${isDate ? formatTacticalDate(cell) : (cell ?? "")}
-                                                        </td>`;
-                                            }).join('')}
-                                        </tr>`).join('')}
-                                </tbody>
-                            </table>
+                            <div class="cards-list">
+                                ${sheet.rows.map(r => `
+                                    <div class="tx-card expanded">
+                                        <div class="tx-expanded-body" style="display:flex; border-top:none; padding-top:0; margin-top:0;">
+                                            ${r.map((cell, idx) => `
+                                                <div class="tx-detail-row">
+                                                    <span class="tx-detail-label">${sheet.headers[idx]}</span>
+                                                    <span class="tx-detail-value">${cell ?? ''}</span>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
                         </div>
                     </div>`;
             }
@@ -2472,17 +2738,17 @@ async function fetchAssociated() {
     }
 }
 
-
 let longPressTimer;
-function showContextMenu(e, rowElement) {
+function showContextMenu(e, cardElement) {
     if (e.cancelable) e.preventDefault();
-    if (!rowElement.classList.contains('selected')) {
-        document.querySelectorAll('.data-row.selected').forEach(r => r.classList.remove('selected'));
-        handleRowClick(rowElement);
+    if (!cardElement.classList.contains('selected')) {
+        document.querySelectorAll('.tx-card.selected').forEach(r => r.classList.remove('selected'));
+        cardElement.classList.add('selected');
+        recalculateMetricsFromSelected();
     }
 
     const menu = document.getElementById('custom-context-menu');
-    const selectedCount = document.querySelectorAll('.data-row.selected').length;
+    const selectedCount = document.querySelectorAll('.tx-card.selected').length;
     
     let menuHtml = ``;
     if (selectedCount === 1) {
@@ -2505,12 +2771,13 @@ function hideContextMenu() {
 
 async function executeCommand(type) {
     hideContextMenu();
-    const selectedRows = document.querySelectorAll('.data-row.selected');
-    if (type === 'copy' && selectedRows.length === 1) copyRowToClipboard(selectedRows[0]);
-    else if (type === 'edit' && selectedRows.length === 1) openEditModal(selectedRows[0]);
+    const selectedCards = document.querySelectorAll('.tx-card.selected');
+    if (type === 'copy' && selectedCards.length === 1) copyCardToClipboard(selectedCards[0]);
+    else if (type === 'edit' && selectedCards.length === 1) openEditModal(selectedCards[0]);
     else if (type === 'trace') fetchAssociated();
     else if (type === 'purge') deleteRecords();
 }
+
 window.addEventListener('click', (e) => {
     if (!e.target.closest('.custom-select-wrapper')) {
         document.querySelectorAll('.custom-select-wrapper').forEach(el => el.classList.remove('open'));
@@ -2518,8 +2785,8 @@ window.addEventListener('click', (e) => {
 });
 
 document.addEventListener('touchstart', function(e) {
-    const row = e.target.closest('.data-row');
-    if (row) longPressTimer = setTimeout(() => showContextMenu(e, row), 550);
+    const card = e.target.closest('.tx-card');
+    if (card) longPressTimer = setTimeout(() => showContextMenu(e, card), 550);
 }, {passive: false});
 
 document.addEventListener('touchend', () => clearTimeout(longPressTimer));
@@ -2551,40 +2818,24 @@ async function forceAppReload() {
     window.location.href = currentUrl.toString();
 }
 
-async function copyRowToClipboard(rowElement) {
-    const table = document.getElementById('mainDataTable');
-    const headers = Array.from(table.querySelectorAll('th')).map(th => th.innerText.replace('▼', '').trim());
-    const cells = Array.from(rowElement.querySelectorAll('td')).map(td => td.innerText.trim());
-
-    const getVal = (regex) => {
-        const idx = headers.findIndex(h => regex.test(h));
-        return idx !== -1 ? cells[idx] : "";
-    };
-
-    const date = getVal(/date/i);
-    const narration = getVal(/narration/i);
-    const spentFor = getVal(/spent for/i);
-    const withdrawn = getVal(/withdrawn amount/i).replace(/[^0-9.]/g, "");
-    const deposit = getVal(/deposit amount/i).replace(/[^0-9.]/g, "");
-    const account = getVal(/from\/ to/i);
-    const ref = getVal(/reference/i);
-
-    const isDebit = parseFloat(withdrawn) > 0;
-    const amount = isDebit ? withdrawn : deposit;
-    const type = isDebit ? "Debit" : "Credit";
-
-    const formattedText = `📅 Date: ${date}\n👤 Name: ${spentFor}\n📝 Msg: ${narration}\n💰 Amount: ${amount}\n⇄ Type: ${type}\n🏢 Account: ${account}\n🔗 Ref: ${ref}`;
+async function copyCardToClipboard(cardElement) {
+    const detailRows = Array.from(cardElement.querySelectorAll('.tx-detail-row'));
+    const textLines = detailRows.map(row => {
+        const label = row.querySelector('.tx-detail-label').innerText;
+        const val = row.querySelector('.tx-detail-value').innerText;
+        return `${label}: ${val}`;
+    });
 
     try {
-        await navigator.clipboard.writeText(formattedText);
-        alert("Copied to clipboard!");
+        await navigator.clipboard.writeText(textLines.join('\n'));
+        alert("Copied transaction details!");
     } catch (err) {
         alert("Copy failed.");
     }
 }
 
 async function deleteRecords() {
-    const ids = Array.from(document.querySelectorAll('.data-row.selected')).map(r => r.getAttribute('data-id'));
+    const ids = Array.from(document.querySelectorAll('.tx-card.selected')).map(r => r.getAttribute('data-id'));
     const token = sessionStorage.getItem("session_token");
     if (!ids.length || !confirm(`PURGE ${ids.length} records?`)) return;
 
@@ -2600,19 +2851,18 @@ async function deleteRecords() {
     }
 }
 
-function openEditModal(rowElement) {
-    const table = document.getElementById('mainDataTable');
-    const headers = Array.from(table.querySelectorAll('th')).map(th => th.innerText.replace('▼', '').trim());
-    const cells = Array.from(rowElement.querySelectorAll('td')).map(td => td.innerText.trim());
-
-    editingRowId = rowElement.getAttribute('data-id');
+function openEditModal(cardElement) {
+    editingRowId = cardElement.getAttribute('data-id');
+    const detailRows = Array.from(cardElement.querySelectorAll('.tx-detail-row'));
     let fieldsHtml = "";
 
-    headers.forEach((header, i) => {
+    detailRows.forEach((row, i) => {
+        const label = row.querySelector('.tx-detail-label').innerText;
+        const val = row.querySelector('.tx-detail-value').innerText;
         fieldsHtml += `
             <div style="margin-bottom:10px;">
-                <label style="font-size:10px; color:var(--text-muted);">${header}</label>
-                <input type="text" value="${cells[i] || ""}" data-index="${i}" class="range-input" style="height:36px; margin-top:2px;">
+                <label style="font-size:10px; color:var(--text-muted);">${label}</label>
+                <input type="text" value="${val !== '-' ? val : ''}" data-index="${i}" class="range-input" style="height:36px; margin-top:2px;">
             </div>
         `;
     });
@@ -2620,6 +2870,7 @@ function openEditModal(rowElement) {
     document.getElementById('edit-fields').innerHTML = fieldsHtml;
     document.getElementById('edit-modal').style.display = "flex";
 }
+
 document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
         setTimeout(() => {
