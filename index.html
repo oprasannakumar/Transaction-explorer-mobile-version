@@ -303,7 +303,7 @@
             background: var(--surface);
             backdrop-filter: var(--glass-blur);
             border: 1px solid var(--border);
-            border-radius: 18px;
+            border-radius: 12px;
             overflow: hidden;
             box-shadow: var(--card-shadow);
             width: 100%;
@@ -608,7 +608,15 @@
 .tx-card.selected { background: rgba(14, 165, 233, 0.2); border-color: var(--primary); }
 .tx-card-collapsed { display: flex; justify-content: space-between; align-items: center; }
 .tx-card-left { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow: hidden; padding-right: 12px; }
-.tx-narration { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-narration { 
+    font-size: 13px; 
+    font-weight: 700; 
+    color: var(--text); 
+    white-space: normal; 
+    word-wrap: break-word; 
+    line-height: 1.3;
+}
+
 .tx-account { font-size: 10px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; }
 .tx-amt { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 800; text-align: right; }
 .tx-amt.in { color: var(--success); }
@@ -746,6 +754,13 @@
                     <button class="btn-future" style="height: 36px; flex: 1.2; border-color: var(--gold); color: var(--gold);" onclick="openMasterFilter()" title="Filter Data">
                         🔍 Filter Data
                     </button>
+                  <button id="toggleExpandBtn" class="btn-future" style="height: 36px; flex: 1; border-color: var(--ledger); color: var(--ledger);" onclick="toggleAllCards()">
+    <svg id="expandIcon" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px;">
+        <polyline points="7 9 12 4 17 9"></polyline>
+        <polyline points="7 15 12 20 17 15"></polyline>
+    </svg>
+    <span>Expand All</span>
+</button>
                     <button class="btn-future" style="height: 36px; flex: 1; border-color: var(--primary); color: var(--primary);" onclick="openShareModal()" title="Share Statement">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> Share
                     </button>
@@ -881,9 +896,10 @@ async function generateFullTableCanvas() {
     exportDiv.style.position = 'absolute';
     exportDiv.style.left = '-9999px';
     exportDiv.style.top = '0';
-    exportDiv.style.width = '1200px'; 
+    exportDiv.style.width = '400px'; 
+    exportDiv.style.height = 'auto'; // Explicitly allow infinite growth
     exportDiv.style.backgroundColor = '#030712';
-    exportDiv.style.padding = '30px';
+    exportDiv.style.padding = '16px';
     exportDiv.style.boxSizing = 'border-box';
     exportDiv.style.color = '#f8fafc';
     exportDiv.style.fontFamily = "'Plus Jakarta Sans', sans-serif";
@@ -894,75 +910,139 @@ async function generateFullTableCanvas() {
     const netColor = document.getElementById('bar-net').style.color;
 
     exportDiv.innerHTML = `
-        <div style="text-align: center; margin-bottom: 24px;">
-            <h2 style="color: #0ea5e9; font-family: 'JetBrains Mono', monospace; font-size: 24px; letter-spacing: 2px; margin-bottom: 16px;">TRANSACTION STATEMENT</h2>
-            <div style="display: flex; justify-content: center; gap: 16px;">
-                <div style="background: rgba(15,23,42,0.85); padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                    <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Inflow</div>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 800; color: #10b981;">${inflow}</div>
+        <div style="text-align: center; margin-bottom: 20px;">
+            <h2 style="color: #0ea5e9; font-family: 'JetBrains Mono', monospace; font-size: 16px; letter-spacing: 2px; margin-top: 0; margin-bottom: 12px;">TRANSACTION STATEMENT</h2>
+            <div style="display: flex; justify-content: space-between; gap: 8px;">
+                <div style="flex: 1; background: rgba(15,23,42,0.85); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size: 8px; color: #94a3b8; text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Inflow</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; color: #10b981;">${inflow}</div>
                 </div>
-                <div style="background: rgba(15,23,42,0.85); padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                    <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Outflow</div>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 800; color: #f43f5e;">${outflow}</div>
+                <div style="flex: 1; background: rgba(15,23,42,0.85); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size: 8px; color: #94a3b8; text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Outflow</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; color: #f43f5e;">${outflow}</div>
                 </div>
-                <div style="background: rgba(15,23,42,0.85); padding: 12px 24px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
-                    <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Net Balance</div>
-                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 800; color: ${netColor};">${net}</div>
+                <div style="flex: 1; background: rgba(15,23,42,0.85); padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                    <div style="font-size: 8px; color: #94a3b8; text-transform: uppercase; font-weight: 800; margin-bottom: 4px;">Net</div>
+                    <div style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 800; color: ${netColor};">${net}</div>
                 </div>
             </div>
         </div>
     `;
 
     const tableClone = document.getElementById('mainDataTable').cloneNode(true);
-    
     tableClone.style.width = '100%';
-    tableClone.style.borderCollapse = 'collapse';
-    
-    const ths = tableClone.querySelectorAll('th');
-    ths.forEach(th => {
-        th.style.background = '#111827';
-        th.style.padding = '12px 10px';
-        th.style.fontSize = '12px';
-        th.style.color = '#94a3b8';
-        th.style.borderBottom = '1px solid rgba(255,255,255,0.08)';
-        th.style.textAlign = 'center';
-        th.style.position = 'static'; 
-    });
-    
-    const tds = tableClone.querySelectorAll('td');
-    tds.forEach(td => {
-        td.style.padding = '12px 10px';
-        td.style.fontSize = '12px';
-        td.style.borderBottom = '1px solid rgba(255,255,255,0.08)';
-        td.style.textAlign = 'center';
-        td.style.whiteSpace = 'normal'; 
-    });
+    tableClone.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
 
     const wrap = document.createElement('div');
-    wrap.style.background = 'rgba(15, 23, 42, 0.85)';
-    wrap.style.borderRadius = '18px';
-    wrap.style.border = '1px solid rgba(255, 255, 255, 0.08)';
-    wrap.style.padding = '10px';
-    wrap.style.height = 'auto'; 
-    wrap.style.overflow = 'visible'; 
+    wrap.style.display = 'flex';
+    wrap.style.flexDirection = 'column';
+    wrap.style.gap = '8px';
     wrap.appendChild(tableClone);
 
     exportDiv.appendChild(wrap);
     document.body.appendChild(exportDiv);
 
-    await new Promise(r => setTimeout(r, 100));
+    // Give DOM a moment to render the full clone
+    await new Promise(r => setTimeout(r, 150));
 
+    const fullHeight = exportDiv.scrollHeight;
+
+    // Scale dropped to 1.5 to prevent memory limits on mobile when exporting huge datasets
     const canvas = await html2canvas(exportDiv, {
         backgroundColor: '#030712',
-        scale: 2,
+        scale: 1.5, 
         useCORS: true,
-        logging: false
+        logging: false,
+        windowWidth: 400,
+        height: fullHeight // Force capture of the absolute full height
     });
 
     document.body.removeChild(exportDiv);
     return canvas;
 }
 
+// ---------------- NATIVE SHARE HANDLER ----------------
+function openShareModal() {
+    const tableWrap = document.getElementById('tableWrap');
+    if (!tableWrap) return alert("No table available to share.");
+    document.getElementById('share-format-modal').classList.add('open');
+}
+
+function closeShareModal(e) {
+    if (!e || e.target.id === 'share-format-modal') {
+        document.getElementById('share-format-modal').classList.remove('open');
+    }
+}
+
+async function executeShare(format) {
+    closeShareModal();
+    setProcessing(true, `PREPARING ${format.toUpperCase()}...`);
+    
+    try {
+        const canvas = await generateFullTableCanvas();
+        if (!canvas) throw new Error("Canvas generation failed.");
+
+        let fileToShare, fileName;
+
+        if (format === 'pdf') {
+            const { jsPDF } = window.jspdf;
+            
+            // Standard A4 dimensions
+            const pdf = new jsPDF('p', 'pt', 'a4');
+            const pdfWidth = pdf.internal.pageSize.getWidth();
+            const pdfHeight = pdf.internal.pageSize.getHeight();
+            
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const imgProps = pdf.getImageProperties(imgData);
+            
+            // Calculate height of the image proportionate to standard PDF width
+            const imgPdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+            
+            let heightLeft = imgPdfHeight;
+            let position = 0;
+            
+            // Add first page
+            pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgPdfHeight);
+            heightLeft -= pdfHeight;
+            
+            // Loop and add new pages while there is still image height left
+            while (heightLeft > 0) {
+                position = position - pdfHeight; // Shift image up by one page
+                pdf.addPage();
+                pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, imgPdfHeight);
+                heightLeft -= pdfHeight;
+            }
+            
+            const pdfBlob = pdf.output('blob');
+            fileName = `FCC_Statement_${new Date().toISOString().slice(0,10)}.pdf`;
+            fileToShare = new File([pdfBlob], fileName, { type: 'application/pdf' });
+        } 
+        else {
+            const imgBlob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+            fileName = `FCC_Statement_${new Date().toISOString().slice(0,10)}.png`;
+            fileToShare = new File([imgBlob], fileName, { type: 'image/png' });
+        }
+
+        if (navigator.share && navigator.canShare && navigator.canShare({ files: [fileToShare] })) {
+            await navigator.share({
+                files: [fileToShare],
+                title: 'Transaction Statement',
+                text: 'Encrypted Finance Command Center Statement'
+            });
+        } else {
+            alert(`Native sharing not supported. Downloading ${format.toUpperCase()} instead.`);
+            const link = document.createElement('a');
+            link.download = fileName;
+            link.href = URL.createObjectURL(fileToShare);
+            link.click();
+        }
+    } catch(e) {
+        console.error("Share Error:", e);
+        alert(`Failed to share ${format.toUpperCase()}.`);
+    } finally {
+        setProcessing(false);
+    }
+}
 
 // ---------------- NATIVE SHARE HANDLER ----------------
 // Open/Close Modal
@@ -1040,33 +1120,38 @@ function renderTable(headers, rows) {
         document.getElementById('table-toolbar-controls').style.display = 'flex';
         document.getElementById('tableFilter').value = "";
         
+        // Hide metrics bar for Self Transfer
+        const metricsBar = document.querySelector('.metrics-bar');
+        if (metricsBar) {
+            metricsBar.style.display = (selectedSheetName === "Self Transfer") ? 'none' : 'grid';
+        }
+        
         activeFilters = {};
         globalRawHeaders = headers; 
         globalRawRows = rows; 
         
-        // Sort by Date automatically if present
         rows = sortRowsByDate(headers, rows); 
         
         let idColIdx = headers.findIndex(h => /id|ref_id|reference/i.test(h));
         if (idColIdx === -1) idColIdx = headers.length - 1;
 
         const narrIdx = headers.findIndex(h => /narration|purpose|reason|description|particulars/i.test(h));
-        const outIdx = headers.findIndex(h => /withdrawn|debit/i.test(h));
-        const inIdx = headers.findIndex(h => /deposit|credit/i.test(h));
+        const outIdx = headers.findIndex(h => /withdrawn|given|debit|paid|expense/i.test(h));
+        const inIdx = headers.findIndex(h => /deposit|received|credit|incoming/i.test(h));
         const accIdx = headers.findIndex(h => /from\/ to|account|party/i.test(h));
         const purposeIdx = headers.findIndex(h => /^purpose$|transaction type|category/i.test(h));
         const explicitAmtIdx = headers.findIndex(h => /^amt$|^amount$/i.test(h));
+        
+        // Find Running Balance (if injected)
+        const runningBalIdx = headers.findIndex(h => /running balance/i.test(h));
 
-        // State Checks for specific sheets
         const isSelfTransferSheet = selectedSheetName === "Self Transfer";
         const isCashEntriesSheet = selectedSheetName === "Cash Entries";
 
-        // 1. Prepare cross-referencing for Cash Entries
         let monthlyTxMap = new Map();
         const denomCols = [];
 
         if (isCashEntriesSheet) {
-            // Find denomination headers dynamically (500, 200, 100, etc.)
             headers.forEach((h, i) => {
                 const num = parseInt(String(h).replace(/[^0-9]/g, ''), 10);
                 if (!isNaN(num) && [500, 200, 100, 50, 20, 10, 5, 2, 1].includes(num)) {
@@ -1074,26 +1159,29 @@ function renderTable(headers, rows) {
                 }
             });
 
-            // Map Narration from Monthly Transaction cache
-            if (globalDataCache && globalDataCache.sheets && globalDataCache.sheets["Monthly Transaction"]) {
-                const mtSheet = globalDataCache.sheets["Monthly Transaction"];
-                const mtIdIdx = mtSheet.headers.findIndex(h => /id|ref_id|reference/i.test(h));
-                const mtNarrIdx = mtSheet.headers.findIndex(h => /narration|purpose|reason/i.test(h));
-                
-                if (mtIdIdx !== -1 && mtNarrIdx !== -1) {
-                    mtSheet.rows.forEach(r => {
-                        const refId = String(r[mtIdIdx]).trim();
-                        if (refId) monthlyTxMap.set(refId, r[mtNarrIdx]);
-                    });
-                }
+            if (globalDataCache && globalDataCache.sheets) {
+                ["Full Statement", "Monthly Transaction", "Self Transfer", "Loan", "Credit"].forEach(sheetName => {
+                    const sheet = globalDataCache.sheets[sheetName];
+                    if (sheet && sheet.headers && sheet.rows) {
+                        const idIdx = sheet.headers.findIndex(h => /id|ref_id|reference/i.test(h));
+                        const nIdx = sheet.headers.findIndex(h => /narration|purpose|reason|description|particulars/i.test(h));
+                        
+                        if (idIdx !== -1 && nIdx !== -1) {
+                            sheet.rows.forEach(r => {
+                                const refId = String(r[idIdx]).trim();
+                                if (refId && !monthlyTxMap.has(refId)) {
+                                    monthlyTxMap.set(refId, String(r[nIdx]));
+                                }
+                            });
+                        }
+                    }
+                });
             }
         }
 
-        // 2. Group rows by Reference ID
         const groupedMap = new Map();
         rows.forEach((row, index) => {
             const rawId = row[idColIdx] ? String(row[idColIdx]).trim() : "";
-            // If no ID exists, assign a unique key so it doesn't improperly merge with other blank IDs
             const key = rawId ? rawId : `UNMERGED_${index}`;
             if (!groupedMap.has(key)) groupedMap.set(key, []);
             groupedMap.get(key).push(row);
@@ -1101,13 +1189,13 @@ function renderTable(headers, rows) {
 
         let cardsHtml = '';
 
-        // 3. Process each group into a single card
         groupedMap.forEach((groupRows, key) => {
-            let isSelfTransfer = isSelfTransferSheet; // Auto true if on the sheet
+            let isSelfTransfer = isSelfTransferSheet;
             let groupOutflow = 0;
             let groupInflow = 0;
             let groupExplicitAmt = 0;
             let groupCashAmount = 0;
+            let groupRunningBal = null; 
             
             let combinedNarration = new Set();
             let combinedAccount = new Set();
@@ -1115,17 +1203,14 @@ function renderTable(headers, rows) {
             let hiddenDataSpans = '';
 
             groupRows.forEach(row => {
-                // Check if row has Self Transfer in purpose (for general statement view)
                 if (!isSelfTransfer && purposeIdx !== -1 && row[purposeIdx] && String(row[purposeIdx]).toLowerCase().includes('self transfer')) {
                     isSelfTransfer = true;
                 }
 
-                // Gather Amounts based on sheet context
                 if (isSelfTransferSheet && explicitAmtIdx !== -1) {
                     groupExplicitAmt = parseFloat(String(row[explicitAmtIdx]).replace(/[^0-9.-]/g, "")) || groupExplicitAmt;
                 } else if (isCashEntriesSheet) {
                     denomCols.forEach(col => {
-                        // FIX: Preserve negative numbers using [^0-9-] instead of [^0-9]
                         const count = parseInt(String(row[col.index]).replace(/[^0-9-]/g, ''), 10) || 0;
                         groupCashAmount += (count * col.value);
                     });
@@ -1136,29 +1221,33 @@ function renderTable(headers, rows) {
                     groupInflow += inflow;
                 }
 
-                // Handle Narration (Pull from cache if Cash Entries)
+                // Extract Running Balance if available
+                if (runningBalIdx !== -1 && row[runningBalIdx] !== undefined && row[runningBalIdx] !== '') {
+                    groupRunningBal = row[runningBalIdx];
+                }
+
                 let narr = '-';
                 if (isCashEntriesSheet) {
                     const rawId = row[idColIdx] ? String(row[idColIdx]).trim() : "";
-                    if (monthlyTxMap.has(rawId)) narr = String(monthlyTxMap.get(rawId));
+                    if (monthlyTxMap.has(rawId)) {
+                        narr = String(monthlyTxMap.get(rawId));
+                    } else if (narrIdx !== -1 && row[narrIdx]) {
+                        narr = String(row[narrIdx]); 
+                    }
                 } else {
                     narr = narrIdx !== -1 && row[narrIdx] ? String(row[narrIdx]) : '-';
                 }
                 
-                // Strip (From) and (To) from Narration, and collect unique ones
                 narr = narr.replace(/\(from\)/gi, '').replace(/\(to\)/gi, '').trim();
                 if (narr && narr !== '-') combinedNarration.add(narr);
 
-                // Collect unique Accounts
                 let acc = accIdx !== -1 && row[accIdx] ? String(row[accIdx]) : 'System';
                 if (acc && acc !== 'System') combinedAccount.add(acc);
 
-                // Populate expanded details and hidden filter targets (No Duplicates)
                 headers.forEach((h, i) => {
                     const fieldName = h.toLowerCase().replace(/\s+/g, '_');
                     let rawContent = getFormattedCellValue(row, i, headers);
                     
-                    // Strip text in expanded view as well
                     if (i === narrIdx && typeof rawContent === 'string') {
                         rawContent = rawContent.replace(/\(from\)/gi, '').replace(/\(to\)/gi, '').trim();
                     }
@@ -1170,20 +1259,16 @@ function renderTable(headers, rows) {
                 });
             });
 
-            // Combine Sets into display strings
             const finalNarration = Array.from(combinedNarration).join(' | ') || '-';
             const finalAccount = Array.from(combinedAccount).join(' ⇄ ') || 'System';
 
-            // Determine final Display Amount and CSS Class based on sheet logic
             let amountStr = '₹0';
             let amtClass = 'neutral';
             
             if (isSelfTransferSheet) {
-                // Specifically for Self Transfer sheet, pull the dedicated amount column and highlight yellow
                 amountStr = formatINR(groupExplicitAmt);
                 amtClass = 'self-transfer-amt';
             } else if (isCashEntriesSheet) {
-                // Specifically for Cash Entries, show the calculated sum of denominations
                 if (groupCashAmount < 0) {
                     amountStr = formatINR(Math.abs(groupCashAmount));
                     amtClass = 'out';
@@ -1195,12 +1280,10 @@ function renderTable(headers, rows) {
                     amtClass = 'neutral';
                 }
             } else if (isSelfTransfer) {
-                // Mixed statements that contain a self transfer: highlight yellow and use max transfer value
                 const transferAmt = Math.max(groupOutflow, groupInflow);
                 amountStr = formatINR(transferAmt);
                 amtClass = 'self-transfer-amt';
             } else {
-                // Standard transactions (Net calculation)
                 const net = groupInflow - groupOutflow;
                 if (net < 0) { 
                     amountStr = formatINR(Math.abs(net)); 
@@ -1211,24 +1294,33 @@ function renderTable(headers, rows) {
                 }
             }
 
+            // Generate Running Balance UI for the card face
+            let runningBalHtml = '';
+            if (groupRunningBal !== null) {
+                runningBalHtml = `<div style="font-size: 10px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; text-align: right; margin-top: 4px; font-weight: 700;">Bal: ${formatINR(groupRunningBal)}</div>`;
+            }
+
             cardsHtml += `
             <div class="tx-card data-row" data-id="${key}" onclick="toggleCardExpand(this)">
                 ${hiddenDataSpans}
                 
-                <div class="tx-card-collapsed">
+                <div class="tx-card-collapsed" style="align-items: flex-start;">
                     <div class="tx-card-left">
                         <div class="tx-narration">${finalNarration}</div>
                         <div class="tx-account">${finalAccount}</div>
                     </div>
-                    <div class="tx-amt ${amtClass}">${amountStr}</div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start; flex-shrink: 0; padding-left: 10px;">
+                        <div class="tx-amt ${amtClass}">${amountStr}</div>
+                        ${runningBalHtml}
+                    </div>
                 </div>
                 
                 <div class="tx-card-expanded">
                     <div class="tx-detail-grid">
                         ${headers.map((h, i) => {
                             const vals = Array.from(uniqueCols[i]);
-                            if (vals.length === 0) return ''; // Hide empty details
-                            const content = vals.join(' | '); // Join unique duplicate-free data
+                            if (vals.length === 0) return ''; 
+                            const content = vals.join(' | '); 
                             return `
                             <div class="tx-detail-item">
                                 <span class="tx-detail-label">${h}</span>
@@ -1285,9 +1377,6 @@ function recalculateMetricsFromSelected() {
     updateMetricsUI(totalInflow, totalOutflow);
 }
 
-function toggleCardExpand(card) {
-    card.classList.toggle('expanded');
-}
 
 // -------------------------------------------------------------
 
@@ -2170,106 +2259,6 @@ async function viewNamedRange(rangeName) {
     }
 }
 
-async function filterLedgerByEntity(type, query) {
-    if (!globalDataCache) return;
-    currentTableMode = 'statement';
-    setProcessing(true, `Filtering ${query}...`);
-
-    try {
-        const fullStatementData = globalDataCache.sheets["Full Statement"];
-        const ledgerHeaders = fullStatementData.headers;
-        
-        const transIdx = ledgerHeaders.findIndex(h => h.toLowerCase().includes('transaction'));
-        let entityIdx = ledgerHeaders.findIndex(h => h.toLowerCase().includes('from/'));
-        if (entityIdx === -1) entityIdx = ledgerHeaders.findIndex(h => h.toLowerCase().includes('account'));
-        
-        const qLower = query.toLowerCase().trim();
-        
-        const matchedRows = fullStatementData.rows.filter(row => {
-            const transType = transIdx !== -1 && row[transIdx] ? String(row[transIdx]).toLowerCase().trim() : "";
-            const entity = entityIdx !== -1 && row[entityIdx] ? String(row[entityIdx]).toLowerCase().trim() : "";
-
-            if (type === "Savings") {
-                if (qLower.includes("cash")) return entity.includes("cash");
-                const isAllowedTrans = transType.includes("upi") || transType.includes("debit") || transType.includes("net");
-                return isAllowedTrans && (entity === qLower);
-            } 
-            else if (type === "CC") {
-                const isCredit = transType.includes("credit");
-                if (qLower.includes("hdfc")) return isCredit && entity.includes("hdfc"); 
-                if (qLower.includes("icici amazon")) return isCredit && entity.includes("icici amazon");
-                if (qLower.includes("icici")) return isCredit && (entity.includes("icici expressions") || entity.includes("icici coral"));
-                if (qLower.includes("axis")) return isCredit && (entity.includes("axis flipkart") || entity.includes("axis neo") || entity.includes("axis myzone"));
-                return isCredit && (entity === qLower);
-            }
-            return false;
-        });
-
-        const s = selectedStart;
-        const e = selectedEnd;
-
-        if (type === "Savings") {
-            const openingBalance = await fetchOpeningBalance(query); 
-            const sortedRows = sortRowsByDate(ledgerHeaders, matchedRows);
-            const enhanced = injectRunningBalance(ledgerHeaders, sortedRows, openingBalance);
-            
-            let displayRows = enhanced.rows;
-            if (s && e) {
-                displayRows = filterRowsLocallyByDate(enhanced.headers, displayRows, s, e);
-            }
-            renderTable(enhanced.headers, displayRows);
-            updateToolbarMetrics(enhanced.headers, displayRows);
-        } else {
-            let displayRows = matchedRows;
-            if (s && e) {
-                displayRows = filterRowsLocallyByDate(ledgerHeaders, displayRows, s, e);
-            }
-            renderTable(ledgerHeaders, displayRows);
-            updateToolbarMetrics(ledgerHeaders, displayRows);
-        }
-        setProcessing(false);
-    } catch (e) {
-        setProcessing(false);
-    }
-}
-
-async function fetchOpeningBalance(accountName) {
-    if (!globalDataCache) return 0;
-    const openingsData = globalDataCache.namedRanges?.ActualOpenings;
-    if (!openingsData || !openingsData.rows) return 0;
-    const row = openingsData.rows.find(r => 
-        String(r[0]).trim().toLowerCase() === String(accountName).trim().toLowerCase()
-    );
-    return row ? (parseFloat(row[1]) || 0) : 0; 
-}
-
-
-function injectRunningBalance(headers, rows, openingBalance) {
-    const depositIdx = headers.findIndex(h => /deposit/i.test(h));
-    const withdrawnIdx = headers.findIndex(h => /withdrawn/i.test(h));
-    const refIdx = headers.findIndex(h => /reference/i.test(h));
-
-    if (depositIdx === -1 || withdrawnIdx === -1) return { headers, rows };
-
-    let running = openingBalance;
-    const newHeaders = [...headers];
-    const insertPosition = refIdx !== -1 ? refIdx : depositIdx + 1;
-    newHeaders.splice(insertPosition, 0, "Running Balance");
-
-    const newRows = rows.map((row, index) => {
-        const deposit = parseFloat((row[depositIdx] || "0").toString().replace(/[^0-9.-]/g, "")) || 0;
-        const withdrawn = parseFloat((row[withdrawnIdx] || "0").toString().replace(/[^0-9.-]/g, "")) || 0;
-        running = (index === 0 ? openingBalance : running) + deposit - withdrawn;
-
-        const newRow = [...row];
-        running = Math.round((running + Number.EPSILON) * 100) / 100;
-        newRow.splice(insertPosition, 0, running);
-        return newRow;
-    });
-
-    return { headers: newHeaders, rows: newRows };
-}
-
 function updateMetricsUI(inflow, outflow) {
     document.getElementById('bar-inflow').innerText = formatINR(inflow);
     document.getElementById('bar-outflow').innerText = formatINR(outflow);
@@ -2379,20 +2368,180 @@ function handleRowClick(rowElement) {
     rowElement.classList.toggle('selected');
     recalculateMetricsFromSelected();
 }
+async function filterLedgerByEntity(type, query) {
+    if (!globalDataCache) return;
+    currentTableMode = 'statement';
+    setProcessing(true, `Filtering ${query}...`);
+
+    try {
+        // Fallback to Monthly Transaction if Full Statement isn't available
+        const fullStatementData = globalDataCache.sheets["Full Statement"] || globalDataCache.sheets["Monthly Transaction"];
+        const ledgerHeaders = fullStatementData.headers;
+        
+        let entityIdx = ledgerHeaders.findIndex(h => h.toLowerCase().includes('from/'));
+        if (entityIdx === -1) entityIdx = ledgerHeaders.findIndex(h => h.toLowerCase().includes('account'));
+        if (entityIdx === -1) entityIdx = ledgerHeaders.findIndex(h => h.toLowerCase().includes('party'));
+        
+        const qLower = query.toLowerCase().trim();
+        
+        const matchedRows = fullStatementData.rows.filter(row => {
+            const entity = entityIdx !== -1 && row[entityIdx] ? String(row[entityIdx]).toLowerCase().trim() : "";
+
+            // Removed strict transType checking to ensure ALL data shows regardless of transaction mode
+            if (type === "Savings") {
+                if (qLower.includes("cash")) return entity.includes("cash");
+                return entity === qLower;
+            } 
+            else if (type === "CC") {
+                if (qLower.includes("hdfc")) return entity.includes("hdfc"); 
+                if (qLower.includes("icici amazon")) return entity.includes("icici amazon");
+                if (qLower.includes("icici")) return entity.includes("icici expressions") || entity.includes("icici coral");
+                if (qLower.includes("axis")) return entity.includes("axis flipkart") || entity.includes("axis neo") || entity.includes("axis myzone");
+                return entity === qLower;
+            }
+            return false;
+        });
+
+        const s = selectedStart;
+        const e = selectedEnd;
+
+        if (type === "Savings") {
+            const openingBalance = await fetchOpeningBalance(query); 
+            const sortedRows = sortRowsByDate(ledgerHeaders, matchedRows);
+            const enhanced = injectRunningBalance(ledgerHeaders, sortedRows, openingBalance);
+            
+            let displayRows = enhanced.rows;
+            if (s && e) {
+                displayRows = filterRowsLocallyByDate(enhanced.headers, displayRows, s, e);
+            }
+            renderTable(enhanced.headers, displayRows);
+            updateToolbarMetrics(enhanced.headers, displayRows);
+        } else {
+            // For CC, we just show the ledger without a savings running balance
+            const sortedRows = sortRowsByDate(ledgerHeaders, matchedRows);
+            let displayRows = sortedRows;
+            if (s && e) {
+                displayRows = filterRowsLocallyByDate(ledgerHeaders, displayRows, s, e);
+            }
+            renderTable(ledgerHeaders, displayRows);
+            updateToolbarMetrics(ledgerHeaders, displayRows);
+        }
+        setProcessing(false);
+    } catch (e) {
+        console.error("Filter Error:", e);
+        setProcessing(false);
+    }
+}
+
+async function fetchOpeningBalance(accountName) {
+    if (!globalDataCache) return 0;
+    
+    // Pull the accurate dynamic balance from ActualOpenings instead of the static Savings sheet
+    const openingsData = globalDataCache.namedRanges?.ActualOpenings;
+    if (!openingsData || !openingsData.rows) return 0;
+    
+    const row = openingsData.rows.find(r => 
+        String(r[0]).trim().toLowerCase() === String(accountName).trim().toLowerCase()
+    );
+    
+    return row ? (parseFloat(row[1]) || 0) : 0; 
+}
+
+function injectRunningBalance(headers, rows, openingBalance) {
+    const depositIdx = headers.findIndex(h => /deposit|received|credit|incoming/i.test(h));
+    const withdrawnIdx = headers.findIndex(h => /withdrawn|given|debit|paid|expense/i.test(h));
+    const refIdx = headers.findIndex(h => /reference|ref_id|id/i.test(h));
+
+    if (depositIdx === -1 || withdrawnIdx === -1) return { headers, rows };
+
+    let running = openingBalance;
+    const newHeaders = [...headers];
+    
+    const insertPosition = refIdx !== -1 ? refIdx : newHeaders.length;
+    newHeaders.splice(insertPosition, 0, "Running Balance");
+
+    const newRows = rows.map((row) => {
+        const deposit = parseFloat((row[depositIdx] || "0").toString().replace(/[^0-9.-]/g, "")) || 0;
+        const withdrawn = parseFloat((row[withdrawnIdx] || "0").toString().replace(/[^0-9.-]/g, "")) || 0;
+        
+        // Standard forward-calculating ledger math
+        running = running + deposit - withdrawn;
+
+        const newRow = [...row];
+        // Round strictly to 2 decimals to prevent floating point UI bugs
+        running = Math.round((running + Number.EPSILON) * 100) / 100;
+        newRow.splice(insertPosition, 0, running);
+        return newRow;
+    });
+
+    return { headers: newHeaders, rows: newRows };
+}
 
 function getFormattedCellValue(row, idx, headers) {
     const headerName = headers[idx].toLowerCase();
     const isDate = /date/i.test(headers[idx]);
     const isInflow = /deposit|received|credit|incoming/.test(headerName);
     const isOutflow = /withdrawn|given|debit|paid|expense/.test(headerName);
-    const isRunningBalance = headerName.includes("running balance");
-    const isAmount = isInflow || isOutflow || headerName.includes("total") || (headerName.includes("balance") && !isRunningBalance);
+    
+    // Fixed: Allowed "balance" to be flagged as an amount so the Running Balance gets the ₹ symbol
+    const isAmount = isInflow || isOutflow || headerName.includes("total") || headerName.includes("balance");
 
     let content = row[idx] ?? '';
     if (isAmount) content = formatINR(content);
     if (isDate) content = formatTacticalDate(content);
     return content;
 }
+
+  function applyFilters() {
+    const searchQuery = document.getElementById('tableFilter').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('.data-row');
+    
+    rows.forEach(row => {
+        let matchesSearch = true;
+        let matchesFilters = true;
+
+        // 1. Standard Text Search
+        if (searchQuery !== "") {
+            matchesSearch = row.innerText.toLowerCase().includes(searchQuery);
+        }
+
+        // 2. Master Data Filter (Checkboxes)
+        if (Object.keys(activeFilters).length > 0) {
+            for (const [field, allowedValues] of Object.entries(activeFilters)) {
+                if (allowedValues.length > 0) {
+                    // Get all hidden data spans for this specific field in this card
+                    const spans = Array.from(row.querySelectorAll(`.hidden-data[data-field="${field}"]`));
+                    const rowValuesForField = spans.map(s => normalizeValue(s.innerText));
+                    
+                    // The row must contain AT LEAST ONE of the checked values for this category
+                    const hasMatch = allowedValues.some(val => rowValuesForField.includes(val));
+                    
+                    if (!hasMatch) {
+                        matchesFilters = false;
+                        break; // Fails this category, hide the row
+                    }
+                }
+            }
+        }
+
+        // Apply Visibility
+        if (matchesSearch && matchesFilters) {
+            row.style.display = 'block';
+        } else {
+            row.style.display = 'none';
+            row.classList.remove('selected'); // Instantly deselect if it gets hidden
+        }
+    });
+    
+    // Update metrics dynamically based on what's visible or selected
+    const hasSelections = document.querySelectorAll('.data-row.selected').length > 0;
+    if (hasSelections) {
+        recalculateMetricsFromSelected();
+    } else {
+        recalculateMetricsFromVisible();
+    }
+}
+
 function resetAllFilters() {
     activeFilters = {};
     document.getElementById('tableFilter').value = "";
@@ -2472,34 +2621,7 @@ async function fetchAssociated() {
 
 
 let longPressTimer;
-function showContextMenu(e, rowElement) {
-    if (e.cancelable) e.preventDefault();
-    if (!rowElement.classList.contains('selected')) {
-        document.querySelectorAll('.data-row.selected').forEach(r => r.classList.remove('selected'));
-        handleRowClick(rowElement);
-    }
 
-    const menu = document.getElementById('custom-context-menu');
-    const selectedCount = document.querySelectorAll('.data-row.selected').length;
-    
-    let menuHtml = ``;
-    if (selectedCount === 1) {
-        menuHtml += `<div class="menu-item" onclick="executeCommand('copy')">📋 Copy Details</div>
-                     <div class="menu-item" onclick="executeCommand('edit')">✏️ Edit Record</div>`;
-    }
-    menuHtml += `<div class="menu-item" onclick="executeCommand('trace')">🔍 Trace Sequence (${selectedCount})</div>
-                 <div class="menu-item danger" onclick="executeCommand('purge')">🔥 Global Purge (${selectedCount})</div>
-                 <div class="menu-item" onclick="hideContextMenu()">❌ Cancel</div>`;
-    menu.innerHTML = menuHtml;
-    menu.style.display = 'block';
-
-    document.addEventListener('click', hideContextMenu);
-}
-
-function hideContextMenu() {
-    document.getElementById('custom-context-menu').style.display = 'none';
-    document.removeEventListener('click', hideContextMenu);
-}
 
 async function executeCommand(type) {
     hideContextMenu();
@@ -2793,6 +2915,90 @@ function resetMasterFilter() {
     mfTempFilters = {};
     renderMfSidebar();
     selectMfHeader(mfActiveHeaderIndex);
+}
+function toggleCardExpand(card) {
+    // If any cards are currently selected, switch to 'Selection Mode' for clicks
+    const hasSelections = document.querySelectorAll('.data-row.selected').length > 0;
+    
+    if (hasSelections) {
+        handleRowClick(card); // Toggle selection state instead of expanding
+    } else {
+        card.classList.toggle('expanded'); // Normal tap to expand
+    }
+}
+
+function showContextMenu(e, rowElement) {
+    if (e.cancelable) e.preventDefault();
+    
+    // Add the current row to the selection if it isn't already selected
+    if (!rowElement.classList.contains('selected')) {
+        handleRowClick(rowElement);
+    }
+
+    const menu = document.getElementById('custom-context-menu');
+    const selectedCount = document.querySelectorAll('.data-row.selected').length;
+    
+    let menuHtml = ``;
+    if (selectedCount === 1) {
+        menuHtml += `<div class="menu-item" onclick="executeCommand('copy')">📋 Copy Details</div>
+                     <div class="menu-item" onclick="executeCommand('edit')">✏️ Edit Record</div>`;
+    }
+    menuHtml += `<div class="menu-item" onclick="executeCommand('trace')">🔍 Trace Sequence (${selectedCount})</div>
+                 <div class="menu-item danger" onclick="executeCommand('purge')">🔥 Global Purge (${selectedCount})</div>
+                 <div class="menu-item" onclick="clearAllSelections()">❌ Clear Selection</div>`;
+    
+    menu.innerHTML = menuHtml;
+    menu.style.display = 'block';
+
+    // Add event listener with a slight delay to prevent instant closing from touch synthesis
+    setTimeout(() => {
+        document.addEventListener('click', hideContextMenuOutside);
+    }, 10);
+}
+
+function hideContextMenuOutside(e) {
+    // Close the menu if the user clicks anywhere outside the menu itself
+    if (!e.target.closest('#custom-context-menu')) {
+        hideContextMenu();
+    }
+}
+
+function hideContextMenu() {
+    document.getElementById('custom-context-menu').style.display = 'none';
+    document.removeEventListener('click', hideContextMenuOutside);
+}
+
+function clearAllSelections() {
+    document.querySelectorAll('.data-row.selected').forEach(r => r.classList.remove('selected'));
+    recalculateMetricsFromSelected(); // Reverts metrics bar back to visible rows
+    hideContextMenu();
+}
+function toggleAllCards() {
+    const cards = document.querySelectorAll('.tx-card');
+    const btn = document.getElementById('toggleExpandBtn');
+    if (!cards.length) return;
+
+    // SVG shapes for Expand and Collapse states
+    const iconExpand = `<polyline points="7 9 12 4 17 9"></polyline><polyline points="7 15 12 20 17 15"></polyline>`;
+    const iconCollapse = `<polyline points="7 4 12 9 17 4"></polyline><polyline points="7 20 12 15 17 20"></polyline>`;
+
+    const hasCollapsed = Array.from(cards).some(card => !card.classList.contains('expanded'));
+
+    if (hasCollapsed) {
+        // Expand everything
+        cards.forEach(card => card.classList.add('expanded'));
+        if (btn) {
+            btn.querySelector('span').innerText = 'Collapse All';
+            btn.querySelector('svg').innerHTML = iconCollapse;
+        }
+    } else {
+        // Collapse everything
+        cards.forEach(card => card.classList.remove('expanded'));
+        if (btn) {
+            btn.querySelector('span').innerText = 'Expand All';
+            btn.querySelector('svg').innerHTML = iconExpand;
+        }
+    }
 }
 
 function logout() {
