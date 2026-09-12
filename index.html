@@ -2387,7 +2387,6 @@ async function filterLedgerByEntity(type, query) {
         const matchedRows = fullStatementData.rows.filter(row => {
             const entity = entityIdx !== -1 && row[entityIdx] ? String(row[entityIdx]).toLowerCase().trim() : "";
 
-            // Removed strict transType checking to ensure ALL data shows regardless of transaction mode
             if (type === "Savings") {
                 if (qLower.includes("cash")) return entity.includes("cash");
                 return entity === qLower;
@@ -2406,9 +2405,14 @@ async function filterLedgerByEntity(type, query) {
         const e = selectedEnd;
 
         if (type === "Savings") {
-            const openingBalance = await fetchOpeningBalance(query); 
             const sortedRows = sortRowsByDate(ledgerHeaders, matchedRows);
-            const enhanced = injectRunningBalance(ledgerHeaders, sortedRows, openingBalance);
+            let enhanced = { headers: ledgerHeaders, rows: sortedRows };
+            
+            // Apply running balance ONLY if the account is not "Cash"
+            if (qLower !== "cash") {
+                const openingBalance = await fetchOpeningBalance(query); 
+                enhanced = injectRunningBalance(ledgerHeaders, sortedRows, openingBalance);
+            }
             
             let displayRows = enhanced.rows;
             if (s && e) {
@@ -2436,15 +2440,36 @@ async function filterLedgerByEntity(type, query) {
 async function fetchOpeningBalance(accountName) {
     if (!globalDataCache) return 0;
     
-    // Pull the accurate dynamic balance from ActualOpenings instead of the static Savings sheet
+    const q = String(accountName).trim().toLowerCase();
+    
+    // 1. STRICT OVERRIDE FOR CASH (Bypasses the Google Sheet entirely)
+    if (q === "cash") {
+        return 18432;
+    }
+
+    let bal = null;
+
+    // 2. Try ActualOpenings first (Dynamic bank balances like HDFC, SBI)
     const openingsData = globalDataCache.namedRanges?.ActualOpenings;
-    if (!openingsData || !openingsData.rows) return 0;
+    if (openingsData && openingsData.rows) {
+        const row = openingsData.rows.find(r => String(r[0]).trim().toLowerCase() === q);
+        if (row && row[1] !== undefined && row[1] !== "") {
+            bal = parseFloat(row[1]);
+        }
+    }
     
-    const row = openingsData.rows.find(r => 
-        String(r[0]).trim().toLowerCase() === String(accountName).trim().toLowerCase()
-    );
+    // 3. Fallback to Savings (Static/Manual balances)
+    if (bal === null || isNaN(bal)) {
+        const savingsData = globalDataCache.namedRanges?.Savings;
+        if (savingsData && savingsData.rows) {
+            const row = savingsData.rows.find(r => String(r[0]).trim().toLowerCase() === q);
+            if (row && row[1] !== undefined && row[1] !== "") {
+                bal = parseFloat(row[1]);
+            }
+        }
+    }
     
-    return row ? (parseFloat(row[1]) || 0) : 0; 
+    return bal || 0; 
 }
 
 function injectRunningBalance(headers, rows, openingBalance) {
@@ -2838,9 +2863,17 @@ function selectMfHeader(index) {
 
     // Extract unique values directly from raw data for the Right Pane
     const isDateColumn = /date/i.test(headerName);
+    const isNarrColumn = /narration|purpose|reason|description|particulars/i.test(headerName);
+    
     const valueSet = new Set();
     globalRawRows.forEach(row => {
         let rawValue = (row[index] ?? "").toString().trim();
+        
+        // Apply the exact same stripping logic used on the cards
+        if (isNarrColumn && typeof rawValue === 'string') {
+            rawValue = rawValue.replace(/\(from\)/gi, '').replace(/\(to\)/gi, '').trim();
+        }
+        
         if (rawValue !== "") valueSet.add(rawValue);
     });
 
