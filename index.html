@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Finance Command Center | Mobile v4.6</title>
+    <title>Finance Command Center | Mobile v4.7</title>
     
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#030712">
@@ -46,17 +46,16 @@
             overflow: hidden;
         }
 
-body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background: radial-gradient(circle at 50% 0%, #1e293b 0%, #030712 100%);
-    color: var(--text);
-    margin: 0;
-    padding: calc(env(safe-area-inset-top) + 8px) 8px calc(env(safe-area-inset-bottom) + 40px) 8px;
-    min-height: 100vh;
-    min-height: 100dvh;
-    overflow-x: hidden;
-    overflow-y: auto; /* Prevent body clipping */
-}
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: radial-gradient(circle at 50% 0%, #1e293b 0%, #030712 100%);
+            color: var(--text);
+            margin: 0;
+            padding: calc(env(safe-area-inset-top) + 8px) 8px calc(env(safe-area-inset-bottom) + 36px) 8px;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+        }
 
         body::after {
             content: ""; position: fixed; inset: 0;
@@ -73,13 +72,14 @@ body {
         @keyframes gridMove { from { background-position: 0 0; } to { background-position: 30px 30px; } }
 
         .container { 
-    width: 100%; 
-    max-width: 100%; 
-    height: auto; /* Let container expand based on content */
-    margin: 0 auto; 
-    display: flex;
-    flex-direction: column;
-}
+            width: 100%; 
+            max-width: 100%; 
+            height: 100%;
+            margin: 0 auto; 
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
         #status {
             font-family: 'JetBrains Mono', monospace;
@@ -285,15 +285,14 @@ body {
         .pill-val { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 700; }
 
         #displayArea {
-    flex: 1;
-    min-height: 400px;
-    position: relative;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    overflow: visible; /* Prevent clipping charts or transaction cards */
-}
-
+            flex: 1;
+            min-height: 0;
+            position: relative;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
         .sheet-card {
             background: var(--surface);
@@ -307,30 +306,29 @@ body {
             display: flex;
             flex-direction: column;
         }
-html {
-    height: 100%;
-    overflow-x: hidden;
-    overflow-y: auto; /* Allow document scrolling */
-}
 
         .table-wrap {
-    overflow-y: auto;
-    overflow-x: hidden;
-    width: 100%;
-    height: 100%;
-    -webkit-overflow-scrolling: touch;
-    flex: 1;
-    padding: 10px;
-    /* Added safe-area-inset buffer here as well */
-    padding-bottom: calc(env(safe-area-inset-bottom) + 90px); 
-}
-        .table-wrap, .vault-card-wrap {
-    overflow-y: visible; 
-    overflow-x: hidden;
-    width: 100%;
-    height: auto;
-    padding-bottom: calc(env(safe-area-inset-bottom) + 40px);
-}      
+            overflow-y: auto;
+            overflow-x: hidden;
+            width: 100%;
+            height: 100%;
+            -webkit-overflow-scrolling: touch;
+            flex: 1;
+            padding: 10px;
+            padding-bottom: calc(env(safe-area-inset-bottom) + 120px); 
+        }
+
+        .vault-card-wrap { 
+            overflow-y: auto; 
+            overflow-x: hidden; 
+            width: 100%; 
+            height: 100%; 
+            -webkit-overflow-scrolling: touch; 
+            padding-bottom: calc(env(safe-area-inset-bottom) + 120px);
+            padding-top: 12px;
+            flex: 1; 
+        }
+      
         /* --- TRANSACTION CARD STYLES --- */
         .cards-list {
             display: flex;
@@ -621,14 +619,16 @@ html {
         .fin-panel { background: rgba(15,23,42,0.85); border-radius: 14px; padding: 15px 13px; border: 1px solid rgba(14,165,233,0.2); }
 
         /* --- DASHBOARD CHARTS --- */
-      .chart-dashboard {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    padding-bottom: 40px; 
-    overflow: visible; /* Ensure charts are fully viewable */
-}
-
+        .chart-dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding-bottom: 70px; 
+            overflow-y: auto;
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            flex: 1;
+        }
 
         .chart-card {
             background: var(--surface);
@@ -2507,44 +2507,18 @@ function renderTable(headers, rows) {
                                 ${headers.map((h, cIdx) => {
                                     const fieldName = h.toLowerCase().replace(/\s+/g, '_');
                                     
-                                    let displayVal = '-';
-                                    if (hasSelfTransferPurpose) {
-                                        let fromVal = '-';
-                                        let toVal = '-';
-                                        item.originalRows.forEach(subRow => {
-                                            let subNar = narrationIdx !== -1 ? String(subRow[narrationIdx]) : "";
-                                            let val = getFormattedCellValue(subRow, cIdx, headers);
-                                            if (cIdx === narrationIdx && val) {
-                                                val = String(val).replace(/\s*\((To|From)\)\s*$/i, "").trim();
-                                            }
-                                            if (val && val !== '-' && val !== '') {
-                                                if (subNar.includes("(From)")) fromVal = val;
-                                                else if (subNar.includes("(To)")) toVal = val;
-                                                else {
-                                                    if (fromVal === '-') fromVal = val;
-                                                    else if (toVal === '-') toVal = val;
-                                                }
-                                            }
-                                        });
-
-                                        if (fromVal !== '-' && toVal !== '-' && fromVal !== toVal) {
-                                            displayVal = `${fromVal} / ${toVal}`;
-                                        } else {
-                                            displayVal = fromVal !== '-' ? fromVal : (toVal !== '-' ? toVal : getFormattedCellValue(row, cIdx, headers));
+                                    let uniqueVals = [];
+                                    item.originalRows.forEach(subRow => {
+                                        let val = getFormattedCellValue(subRow, cIdx, headers);
+                                        if (cIdx === narrationIdx && val) {
+                                            val = String(val).replace(/\s*\((To|From)\)\s*$/i, "").trim();
                                         }
-                                    } else {
-                                        let uniqueVals = [];
-                                        item.originalRows.forEach(subRow => {
-                                            let val = getFormattedCellValue(subRow, cIdx, headers);
-                                            if (cIdx === narrationIdx && val) {
-                                                val = String(val).replace(/\s*\((To|From)\)\s*$/i, "").trim();
-                                            }
-                                            if (val && val !== '-' && val !== '') {
-                                                if (!uniqueVals.includes(val)) uniqueVals.push(val);
-                                            }
-                                        });
-                                        displayVal = uniqueVals.length > 0 ? uniqueVals.join(' / ') : '-';
-                                    }
+                                        if (val && val !== '-' && val !== '') {
+                                            if (!uniqueVals.includes(val)) uniqueVals.push(val);
+                                        }
+                                    });
+
+                                    const displayVal = uniqueVals.length > 0 ? uniqueVals.join(' / ') : '-';
 
                                     return `
                                         <div class="tx-detail-row" data-field="${fieldName}" data-val="${normalizeValue(displayVal)}">
@@ -2740,7 +2714,7 @@ async function fetchAssociated() {
             finalHtml += `<div style="text-align:center; padding:40px; color:var(--text-muted); font-size:12px;">NO ASSOCIATED RECORDS FOUND</div>`;
         }
 
-        document.getElementById('displayArea').innerHTML = finalHtml;
+        document.getElementById('displayArea').innerHTML = html;
         setProcessing(false);
         document.getElementById('status').innerText = "TRACE_COMPLETE";
         
@@ -2927,7 +2901,7 @@ function showLogoutScreen() {
         <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 16px; text-align:center;">
             <div style="font-size:32px; margin-bottom:8px;">🔐</div>
             <h4 style="color:var(--primary); letter-spacing:2px; margin:0 0 6px 0; font-size:12px; font-weight:800;">ENCRYPTED TERMINAL</h4>
-            <p style="color:var(--text-muted); font-size:10px; margin-bottom:16px;">Connection secure. Tap below to authenticate.</p>
+            <p style="color:var(--text-muted); font-size:10px; margin-bottom:16px;">Connection secure. Tap below to authenticate. </p>
             <button class="btn-login" onclick="startAuthSequence()">
                 INITIALIZE LOGIN
             </button>
