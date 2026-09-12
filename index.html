@@ -16,7 +16,7 @@
     
     <!-- Required for Image Export feature -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -595,6 +595,72 @@
     color: var(--primary);
     font-weight: 700;
 }
+      /* Card View Styles */
+.tx-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.tx-card.selected { background: rgba(14, 165, 233, 0.2); border-color: var(--primary); }
+.tx-card-collapsed { display: flex; justify-content: space-between; align-items: center; }
+.tx-card-left { display: flex; flex-direction: column; gap: 4px; flex: 1; overflow: hidden; padding-right: 12px; }
+.tx-narration { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-account { font-size: 10px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; }
+.tx-amt { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 800; text-align: right; }
+.tx-amt.in { color: var(--success); }
+.tx-amt.out { color: var(--danger); }
+.tx-amt.neutral { color: var(--primary); }
+.tx-amt.self-transfer-amt { color: var(--gold); }
+.tx-card-expanded { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,0.1); }
+.tx-card.expanded .tx-card-expanded { display: block; }
+.tx-card.expanded .tx-narration { white-space: normal; }
+.tx-detail-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.tx-detail-item { display: flex; flex-direction: column; gap: 2px; }
+.tx-detail-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; font-weight: 800; }
+.tx-detail-val { font-size: 11px; color: var(--text); word-wrap: break-word; }
+
+.header-filter-btn {
+    background: rgba(0,0,0,0.5); border: 1px solid var(--border); color: var(--primary);
+    border-radius: 10px; width: 38px; height: 38px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer;
+}
+/* Master Filter Split-Pane UI */
+.master-filter-modal {
+    display: none; position: fixed; inset: 0; background: rgba(3, 7, 18, 0.85); 
+    backdrop-filter: blur(12px); z-index: 999999; align-items: center; justify-content: center; padding: 16px;
+}
+.master-filter-modal.open { display: flex; }
+.master-filter-content {
+    background: #0f172a; border: 1px solid var(--primary); border-radius: 16px; 
+    width: 100%; max-width: 500px; height: 85vh; max-height: 800px; 
+    display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.95);
+}
+.master-filter-header {
+    padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;
+}
+.master-filter-body { display: flex; flex: 1; overflow: hidden; }
+.master-filter-sidebar {
+    width: 35%; max-width: 130px; background: rgba(0,0,0,0.3); border-right: 1px solid var(--border); 
+    overflow-y: auto; padding: 8px;
+}
+.master-filter-main {
+    flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px;
+}
+.master-filter-footer {
+    padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; background: rgba(0,0,0,0.2);
+}
+.mf-sidebar-item {
+    padding: 10px; font-size: 11px; color: var(--text-muted); border-radius: 8px; cursor: pointer; margin-bottom: 4px; font-weight: 600;
+}
+.mf-sidebar-item.active { background: rgba(14, 165, 233, 0.15); color: var(--primary); border: 1px solid rgba(14, 165, 233, 0.3); }
+.mf-sidebar-item.has-filter { position: relative; }
+.mf-sidebar-item.has-filter::after {
+    content: '•'; color: var(--gold); position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 20px;
+}
+
     </style>
 </head>
 <body>
@@ -666,27 +732,26 @@
 
             <!-- TABLE SEARCH BAR & METRICS (FIXED INSIDE TOOLBAR) -->
             <div id="table-toolbar-controls" style="display: none; flex-direction: column; gap: 8px; width: 100%; border-top: 1px solid var(--border); padding-top: 8px;">
+                
                 <div class="search-row">
+
                     <button class="btn-future" onclick="handleTableBack()" style="height:38px; flex:none; padding:0 10px; border-color:var(--primary);">
                         ← Dash
                     </button>
-                    <!-- Search bar reclaimed full width -->
-                    <input type="text" id="tableFilter" placeholder="Search transactions..." onkeyup="applyFilters()">
+                    <input type="text" id="tableFilter" placeholder="Search..." onkeyup="applyFilters()">
                     <button class="btn-future-danger" style="height:38px; width:55px; padding:0;" onclick="resetAllFilters()">RESET</button>
                 </div>
-                
-                <!-- NEW ACTION ROW: Clean, evenly distributed layout for Columns, Export, and Share -->
-                <div style="display: flex; gap: 6px; width: 100%;">
-                    <button class="btn-future" style="height: 36px; flex: 1.2; border-color: var(--gold); color: var(--gold);" onclick="openColumnSelector()" title="Toggle Columns">
-                        📋 Columns <span id="col-count-badge" style="margin-left: 6px; font-weight: 800; background: rgba(245,158,11,0.2); padding: 2px 6px; border-radius: 4px; font-size: 10px;">All</span>
-                    </button>
-                   
- <button class="btn-future" style="height: 36px; flex: 1; border-color: var(--primary); color: var(--primary);" onclick="openShareModal()" title="Share Statement">
-    <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> Share
-</button>
 
+                <div style="display: flex; gap: 6px; width: 100%;">
+                    <button class="btn-future" style="height: 36px; flex: 1.2; border-color: var(--gold); color: var(--gold);" onclick="openMasterFilter()" title="Filter Data">
+                        🔍 Filter Data
+                    </button>
+                    <button class="btn-future" style="height: 36px; flex: 1; border-color: var(--primary); color: var(--primary);" onclick="openShareModal()" title="Share Statement">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg> Share
+                    </button>
                 </div>
 
+                <!-- METRICS BAR (RESTORED) -->
                 <div class="metrics-bar" style="grid-template-columns: repeat(3, 1fr);">
                     <div class="metric-pill">
                         <span class="pill-label">Inflow</span>
@@ -701,7 +766,9 @@
                         <span class="pill-val" id="bar-net" style="color:var(--primary);">₹0</span>
                     </div>
                 </div>
+
             </div>
+
             <!-- TRACE TOOLBAR (ONLY BACK & LOGOUT) -->
             <div id="trace-toolbar-controls" style="display: none; justify-content: space-between; align-items: center; width: 100%;">
                 <button class="btn-future" onclick="exitTraceView()" style="height: 38px; flex: none; padding: 0 14px;">
@@ -715,46 +782,34 @@
         </div>
 
 <div id="displayArea"></div>
+<div id="master-filter-modal" class="master-filter-modal" onclick="closeMasterFilterModal(event)">
+    <div class="master-filter-content" onclick="event.stopPropagation()">
+        <div class="master-filter-header">
+            <span style="font-size:13px; font-weight:800; color:var(--primary); text-transform:uppercase;">Data Filter</span>
+            <button onclick="closeMasterFilterModal()" style="background:none; border:none; color:var(--text-muted); font-size:18px;">✕</button>
+        </div>
+        <div class="master-filter-body">
+            <!-- Left Pane: Headers -->
+            <div id="mf-sidebar" class="master-filter-sidebar"></div>
+            
+            <!-- Right Pane: Elements -->
+            <div class="master-filter-main">
+                <input type="text" id="mf-search" class="range-input" style="height:36px; margin-bottom: 8px; flex-shrink: 0;" placeholder="Search options..." onkeyup="filterMfOptions(this.value)">
+<div style="margin-bottom:4px; flex-shrink: 0;">
+    <span style="font-size:10px; color:var(--text-muted); font-weight:700; text-transform:uppercase;" id="mf-current-header">Header</span>
+</div>
 
-    <!-- Data Filter Modal -->
-    <div id="global-filter-modal" class="filter-modal-backdrop" onclick="closeFilterModal(event)">
-        <div class="filter-modal-content" onclick="event.stopPropagation()">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-                <span id="filter-modal-title" style="font-size:12px; font-weight:800; color:var(--primary); text-transform:uppercase;">Filter Column</span>
-                <button onclick="closeFilterModal()" style="background:none; border:none; color:var(--text-muted); font-size:16px;">✕</button>
-            </div>
-            <input type="text" id="filter-search-input" class="range-input" style="height:36px;" placeholder="Search options..." onkeyup="filterColumnOptions(this.value)">
-            <div id="modal-options-container" class="filter-options-container"></div>
-            <div style="display:flex; gap:6px; margin-top:6px;">
-                <button class="btn-future" style="height:36px; font-size:10px;" onclick="selectAllModalOptions()">SELECT ALL</button>
-                <button class="btn-future" style="height:36px; font-size:10px;" onclick="confirmModalFilter()">APPLY</button>
-                <button class="btn-future-danger" style="height:36px; font-size:10px;" onclick="clearModalFilter()">CLEAR</button>
+                <div id="mf-options" class="filter-options-container" style="flex:1; max-height:none; overflow-y:auto; padding-right: 4px;"></div>
             </div>
         </div>
+<div class="master-filter-footer">
+    <button class="btn-future" style="flex:1; height:38px; font-size:10px; border-color:var(--primary); color:var(--primary);" onclick="mfSelectAll()">Select All</button>
+    <button class="btn-future-danger" style="flex:1; height:38px; font-size:10px;" onclick="resetMasterFilter()">Reset</button>
+    <button class="btn-future" style="flex:1; height:38px; font-size:10px; border-color:var(--success); color:var(--success);" onclick="applyMasterFilter()">Apply</button>
+</div>
     </div>
+</div>
 
-    <!-- Column Visibility Modal -->
-    <div id="column-visibility-modal" class="filter-modal-backdrop" onclick="closeColumnModal(event)">
-        <div class="filter-modal-content" style="max-width: 380px; padding: 18px;" onclick="event.stopPropagation()">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
-                <span style="font-size:13px; font-weight:800; color:var(--gold); text-transform:uppercase;">📋 SHOW / HIDE COLUMNS</span>
-                <button onclick="closeColumnModal()" style="background:none; border:none; color:var(--text-muted); font-size:18px;">✕</button>
-            </div>
-            
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-bottom: 16px;">
-                <button class="btn-future" style="height:34px; font-size:10px; border-color:var(--primary); color:var(--primary);" onclick="colHiderSetAll(true)">☑ All</button>
-                <button class="btn-future-danger" style="height:34px; font-size:10px; border-color:var(--danger); color:var(--danger); background:rgba(244,63,94,0.05);" onclick="colHiderSetAll(false)">☐ None</button>
-                <button class="btn-future" style="height:34px; font-size:10px; border-color:var(--success); color:var(--success); background:rgba(16,185,129,0.05);" onclick="applyColHider()">Apply</button>
-                <button class="btn-future-danger" style="height:34px; font-size:10px;" onclick="resetColHider()">Reset</button>
-            </div>
-
-            <div id="column-options-container" class="filter-options-container" style="max-height: 280px; padding-right:4px;"></div>
-            
-            <div id="col-hider-footer" style="text-align:center; font-size:10px; color:var(--text-muted); margin-top:14px; font-weight: 600;">
-                <!-- Dynamically updated -->
-            </div>
-        </div>
-    </div>
 <div id="share-format-modal" class="filter-modal-backdrop" onclick="closeShareModal(event)">
     <div class="filter-modal-content" style="max-width: 320px; padding: 20px; text-align: center; border-color: var(--primary);" onclick="event.stopPropagation()">
         <div style="font-size:13px; font-weight:800; color:var(--primary); margin-bottom: 8px; letter-spacing:1px;">📤 SHARE STATEMENT</div>
@@ -975,105 +1030,263 @@ async function executeShare(format) {
     }
 }
 
-// ---------------- COLUMN VISIBILITY MODAL LOGIC ----------------
-function openColumnSelector() {
-    if (!globalRawHeaders || globalRawHeaders.length === 0) return;
-    tempHiddenColumns = new Set(hiddenColumnNames); 
-    renderColHiderList();
-    document.getElementById('column-visibility-modal').classList.add('open');
-}
-
-function renderColHiderList() {
-    const container = document.getElementById('column-options-container');
-    const total = globalRawHeaders.length;
-    const hiddenCount = tempHiddenColumns.size;
-    const visibleCount = total - hiddenCount;
-
-    container.innerHTML = globalRawHeaders.map((h, i) => {
-        const normalized = h.toLowerCase().trim();
-        const isHidden = tempHiddenColumns.has(normalized);
+function renderTable(headers, rows) {
+    try {
+        toggleDashboard(false);
+        // Reset toolbars
+        document.querySelectorAll('.toolbar-row').forEach(row => row.style.display = 'flex');
+        document.getElementById('trace-toolbar-controls').style.display = 'none';
+        document.getElementById('vault-toolbar-controls').style.display = 'none';
+        document.getElementById('table-toolbar-controls').style.display = 'flex';
+        document.getElementById('tableFilter').value = "";
         
-        const boxStyle = isHidden 
-            ? "opacity: 0.5; border: 1px solid rgba(255,255,255,0.1); background: transparent;" 
-            : "border: 1px solid var(--primary); background: rgba(14,165,233,0.05);";
+        activeFilters = {};
+        globalRawHeaders = headers; 
+        globalRawRows = rows; 
         
-        const textStyle = isHidden ? "color: var(--text-muted);" : "color: var(--text); font-weight: 600;";
-        const statusBadge = isHidden 
-            ? `<span style="font-size:10px; color:var(--danger); display:flex; align-items:center; gap:4px;">hidden 🚫</span>` 
-            : `<span style="font-size:10px; color:var(--text-muted); display:flex; align-items:center; gap:4px;">visible 👁️</span>`;
+        // Sort by Date automatically if present
+        rows = sortRowsByDate(headers, rows); 
+        
+        let idColIdx = headers.findIndex(h => /id|ref_id|reference/i.test(h));
+        if (idColIdx === -1) idColIdx = headers.length - 1;
 
-        return `
-            <div style="display:flex; justify-content:space-between; align-items:center; padding: 12px; border-radius: 8px; margin-bottom: 6px; cursor: pointer; transition: all 0.2s; ${boxStyle}" onclick="toggleTempColumn('${normalized}')">
-                <span style="${textStyle} font-size:12px;">${h}</span>
-                ${statusBadge}
+        const narrIdx = headers.findIndex(h => /narration|purpose|reason|description|particulars/i.test(h));
+        const outIdx = headers.findIndex(h => /withdrawn|debit/i.test(h));
+        const inIdx = headers.findIndex(h => /deposit|credit/i.test(h));
+        const accIdx = headers.findIndex(h => /from\/ to|account|party/i.test(h));
+        const purposeIdx = headers.findIndex(h => /^purpose$|transaction type|category/i.test(h));
+        const explicitAmtIdx = headers.findIndex(h => /^amt$|^amount$/i.test(h));
+
+        // State Checks for specific sheets
+        const isSelfTransferSheet = selectedSheetName === "Self Transfer";
+        const isCashEntriesSheet = selectedSheetName === "Cash Entries";
+
+        // 1. Prepare cross-referencing for Cash Entries
+        let monthlyTxMap = new Map();
+        const denomCols = [];
+
+        if (isCashEntriesSheet) {
+            // Find denomination headers dynamically (500, 200, 100, etc.)
+            headers.forEach((h, i) => {
+                const num = parseInt(String(h).replace(/[^0-9]/g, ''), 10);
+                if (!isNaN(num) && [500, 200, 100, 50, 20, 10, 5, 2, 1].includes(num)) {
+                    denomCols.push({ index: i, value: num });
+                }
+            });
+
+            // Map Narration from Monthly Transaction cache
+            if (globalDataCache && globalDataCache.sheets && globalDataCache.sheets["Monthly Transaction"]) {
+                const mtSheet = globalDataCache.sheets["Monthly Transaction"];
+                const mtIdIdx = mtSheet.headers.findIndex(h => /id|ref_id|reference/i.test(h));
+                const mtNarrIdx = mtSheet.headers.findIndex(h => /narration|purpose|reason/i.test(h));
+                
+                if (mtIdIdx !== -1 && mtNarrIdx !== -1) {
+                    mtSheet.rows.forEach(r => {
+                        const refId = String(r[mtIdIdx]).trim();
+                        if (refId) monthlyTxMap.set(refId, r[mtNarrIdx]);
+                    });
+                }
+            }
+        }
+
+        // 2. Group rows by Reference ID
+        const groupedMap = new Map();
+        rows.forEach((row, index) => {
+            const rawId = row[idColIdx] ? String(row[idColIdx]).trim() : "";
+            // If no ID exists, assign a unique key so it doesn't improperly merge with other blank IDs
+            const key = rawId ? rawId : `UNMERGED_${index}`;
+            if (!groupedMap.has(key)) groupedMap.set(key, []);
+            groupedMap.get(key).push(row);
+        });
+
+        let cardsHtml = '';
+
+        // 3. Process each group into a single card
+        groupedMap.forEach((groupRows, key) => {
+            let isSelfTransfer = isSelfTransferSheet; // Auto true if on the sheet
+            let groupOutflow = 0;
+            let groupInflow = 0;
+            let groupExplicitAmt = 0;
+            let groupCashAmount = 0;
+            
+            let combinedNarration = new Set();
+            let combinedAccount = new Set();
+            let uniqueCols = headers.map(() => new Set());
+            let hiddenDataSpans = '';
+
+            groupRows.forEach(row => {
+                // Check if row has Self Transfer in purpose (for general statement view)
+                if (!isSelfTransfer && purposeIdx !== -1 && row[purposeIdx] && String(row[purposeIdx]).toLowerCase().includes('self transfer')) {
+                    isSelfTransfer = true;
+                }
+
+                // Gather Amounts based on sheet context
+                if (isSelfTransferSheet && explicitAmtIdx !== -1) {
+                    groupExplicitAmt = parseFloat(String(row[explicitAmtIdx]).replace(/[^0-9.-]/g, "")) || groupExplicitAmt;
+                } else if (isCashEntriesSheet) {
+                    denomCols.forEach(col => {
+                        // FIX: Preserve negative numbers using [^0-9-] instead of [^0-9]
+                        const count = parseInt(String(row[col.index]).replace(/[^0-9-]/g, ''), 10) || 0;
+                        groupCashAmount += (count * col.value);
+                    });
+                } else {
+                    const outflow = outIdx !== -1 ? parseFloat(String(row[outIdx]).replace(/[^0-9.-]/g, "")) || 0 : 0;
+                    const inflow = inIdx !== -1 ? parseFloat(String(row[inIdx]).replace(/[^0-9.-]/g, "")) || 0 : 0;
+                    groupOutflow += outflow;
+                    groupInflow += inflow;
+                }
+
+                // Handle Narration (Pull from cache if Cash Entries)
+                let narr = '-';
+                if (isCashEntriesSheet) {
+                    const rawId = row[idColIdx] ? String(row[idColIdx]).trim() : "";
+                    if (monthlyTxMap.has(rawId)) narr = String(monthlyTxMap.get(rawId));
+                } else {
+                    narr = narrIdx !== -1 && row[narrIdx] ? String(row[narrIdx]) : '-';
+                }
+                
+                // Strip (From) and (To) from Narration, and collect unique ones
+                narr = narr.replace(/\(from\)/gi, '').replace(/\(to\)/gi, '').trim();
+                if (narr && narr !== '-') combinedNarration.add(narr);
+
+                // Collect unique Accounts
+                let acc = accIdx !== -1 && row[accIdx] ? String(row[accIdx]) : 'System';
+                if (acc && acc !== 'System') combinedAccount.add(acc);
+
+                // Populate expanded details and hidden filter targets (No Duplicates)
+                headers.forEach((h, i) => {
+                    const fieldName = h.toLowerCase().replace(/\s+/g, '_');
+                    let rawContent = getFormattedCellValue(row, i, headers);
+                    
+                    // Strip text in expanded view as well
+                    if (i === narrIdx && typeof rawContent === 'string') {
+                        rawContent = rawContent.replace(/\(from\)/gi, '').replace(/\(to\)/gi, '').trim();
+                    }
+                    
+                    if (rawContent !== '' && rawContent !== '-') {
+                        uniqueCols[i].add(rawContent);
+                        hiddenDataSpans += `<span class="hidden-data" data-field="${fieldName}" style="display:none;">${rawContent}</span>`;
+                    }
+                });
+            });
+
+            // Combine Sets into display strings
+            const finalNarration = Array.from(combinedNarration).join(' | ') || '-';
+            const finalAccount = Array.from(combinedAccount).join(' ⇄ ') || 'System';
+
+            // Determine final Display Amount and CSS Class based on sheet logic
+            let amountStr = '₹0';
+            let amtClass = 'neutral';
+            
+            if (isSelfTransferSheet) {
+                // Specifically for Self Transfer sheet, pull the dedicated amount column and highlight yellow
+                amountStr = formatINR(groupExplicitAmt);
+                amtClass = 'self-transfer-amt';
+            } else if (isCashEntriesSheet) {
+                // Specifically for Cash Entries, show the calculated sum of denominations
+                if (groupCashAmount < 0) {
+                    amountStr = formatINR(Math.abs(groupCashAmount));
+                    amtClass = 'out';
+                } else if (groupCashAmount > 0) {
+                    amountStr = formatINR(groupCashAmount);
+                    amtClass = 'in';
+                } else {
+                    amountStr = '₹0';
+                    amtClass = 'neutral';
+                }
+            } else if (isSelfTransfer) {
+                // Mixed statements that contain a self transfer: highlight yellow and use max transfer value
+                const transferAmt = Math.max(groupOutflow, groupInflow);
+                amountStr = formatINR(transferAmt);
+                amtClass = 'self-transfer-amt';
+            } else {
+                // Standard transactions (Net calculation)
+                const net = groupInflow - groupOutflow;
+                if (net < 0) { 
+                    amountStr = formatINR(Math.abs(net)); 
+                    amtClass = 'out'; 
+                } else if (net > 0) { 
+                    amountStr = formatINR(net); 
+                    amtClass = 'in'; 
+                }
+            }
+
+            cardsHtml += `
+            <div class="tx-card data-row" data-id="${key}" onclick="toggleCardExpand(this)">
+                ${hiddenDataSpans}
+                
+                <div class="tx-card-collapsed">
+                    <div class="tx-card-left">
+                        <div class="tx-narration">${finalNarration}</div>
+                        <div class="tx-account">${finalAccount}</div>
+                    </div>
+                    <div class="tx-amt ${amtClass}">${amountStr}</div>
+                </div>
+                
+                <div class="tx-card-expanded">
+                    <div class="tx-detail-grid">
+                        ${headers.map((h, i) => {
+                            const vals = Array.from(uniqueCols[i]);
+                            if (vals.length === 0) return ''; // Hide empty details
+                            const content = vals.join(' | '); // Join unique duplicate-free data
+                            return `
+                            <div class="tx-detail-item">
+                                <span class="tx-detail-label">${h}</span>
+                                <span class="tx-detail-val">${content}</span>
+                            </div>`;
+                        }).join('')}
+                    </div>
+                </div>
+            </div>`;
+        });
+
+        let html = `
+          <div class='sheet-card' style="background:transparent; border:none; box-shadow:none;">
+            <div class='table-wrap' id="tableWrap" style="padding:0 2px 50px 2px;">
+               <div id="mainDataTable">
+                    ${cardsHtml}
+               </div>
             </div>
-        `;
-    }).join('');
+        </div>`;
 
-    document.getElementById('col-hider-footer').innerText = `${visibleCount} of ${total} visible`;
-}
-
-function toggleTempColumn(colName) {
-    if (tempHiddenColumns.has(colName)) {
-        tempHiddenColumns.delete(colName);
-    } else {
-        tempHiddenColumns.add(colName);
-    }
-    renderColHiderList();
-}
-
-function colHiderSetAll(showAll) {
-    if (showAll) {
-        tempHiddenColumns.clear();
-    } else {
-        globalRawHeaders.forEach(h => tempHiddenColumns.add(h.toLowerCase().trim()));
-    }
-    renderColHiderList();
-}
-
-function resetColHider() {
-    tempHiddenColumns = new Set(hiddenColumnNames); 
-    renderColHiderList();
-}
-
-function applyColHider() {
-    hiddenColumnNames = new Set(tempHiddenColumns); 
-    applyColumnVisibility();
-    closeColumnModal();
-}
-
-function closeColumnModal(e) {
-    if (!e || e.target.id === 'column-visibility-modal' || e.target.tagName === 'BUTTON') {
-        document.getElementById('column-visibility-modal').classList.remove('open');
+        document.getElementById('displayArea').innerHTML = html;
+        recalculateMetricsFromVisible();
+        
+    } catch(err) {
+        console.error("Render Table Error:", err);
+        throw err; 
     }
 }
 
-function applyColumnVisibility() {
-    const table = document.getElementById('mainDataTable');
-    if (!table) return;
-    
-    const hiddenIndices = new Set();
-    globalRawHeaders.forEach((h, i) => {
-        if (hiddenColumnNames.has(h.toLowerCase().trim())) {
-            hiddenIndices.add(i);
+function recalculateMetricsFromVisible() {
+    const rows = Array.from(document.querySelectorAll('.data-row'));
+    let totalInflow = 0, totalOutflow = 0;
+    rows.forEach(row => {
+        if (row.style.display !== 'none') {
+            const inflowCell = row.querySelector('.tx-amt.in');
+            const outflowCell = row.querySelector('.tx-amt.out');
+            if (inflowCell) totalInflow += parseFloat(inflowCell.innerText.replace(/[^0-9.-]/g, "")) || 0;
+            if (outflowCell) totalOutflow += parseFloat(outflowCell.innerText.replace(/[^0-9.-]/g, "")) || 0;
         }
     });
+    updateMetricsUI(totalInflow, totalOutflow);
+}
 
-    const rows = table.querySelectorAll('tr');
-    rows.forEach(row => {
-        Array.from(row.children).forEach((cell, i) => {
-            if (hiddenIndices.has(i)) {
-                cell.style.display = 'none';
-            } else {
-                cell.style.display = '';
-            }
-        });
+function recalculateMetricsFromSelected() {
+    const selectedRows = document.querySelectorAll('.data-row.selected');
+    if (selectedRows.length === 0) return recalculateMetricsFromVisible();
+    let totalInflow = 0, totalOutflow = 0;
+    selectedRows.forEach(row => {
+        const inflowCell = row.querySelector('.tx-amt.in');
+        const outflowCell = row.querySelector('.tx-amt.out');
+        if (inflowCell) totalInflow += parseFloat(inflowCell.innerText.replace(/[^0-9.-]/g, "")) || 0;
+        if (outflowCell) totalOutflow += parseFloat(outflowCell.innerText.replace(/[^0-9.-]/g, "")) || 0;
     });
+    updateMetricsUI(totalInflow, totalOutflow);
+}
 
-    const total = globalRawHeaders.length;
-    const visible = total - hiddenColumnNames.size;
-    const badge = document.getElementById('col-count-badge');
-    if(badge) badge.innerText = visible === total ? "All" : visible;
+function toggleCardExpand(card) {
+    card.classList.toggle('expanded');
 }
 
 // -------------------------------------------------------------
@@ -2083,13 +2296,49 @@ function updateToolbarMetrics(headers, rows) {
 
     let inflow = 0, outflow = 0;
     const headerLower = headers.map(h => h.toLowerCase());
-    const inflowIndexes = headerLower.map((h, i) => /deposit|received|credit|incoming/.test(h) ? i : -1).filter(i => i !== -1);
-    const outflowIndexes = headerLower.map((h, i) => /withdrawn|given|debit|paid|expense/.test(h) ? i : -1).filter(i => i !== -1);
+    
+    const isSelfTransferSheet = selectedSheetName === "Self Transfer";
+    const isCashEntriesSheet = selectedSheetName === "Cash Entries";
 
-    rows.forEach(row => {
-        inflowIndexes.forEach(i => { inflow += parseFloat((row[i] || "0").toString().replace(/[^0-9.-]/g, "")) || 0; });
-        outflowIndexes.forEach(i => { outflow += parseFloat((row[i] || "0").toString().replace(/[^0-9.-]/g, "")) || 0; });
-    });
+    if (isSelfTransferSheet) {
+        const explicitAmtIdx = headerLower.findIndex(h => /^amt$|^amount$/i.test(h));
+        if (explicitAmtIdx !== -1) {
+            rows.forEach(row => {
+                const amt = parseFloat((row[explicitAmtIdx] || "0").toString().replace(/[^0-9.-]/g, "")) || 0;
+                inflow += amt;
+                outflow += amt; 
+            });
+        }
+    } else if (isCashEntriesSheet) {
+        const denomCols = [];
+        headerLower.forEach((h, i) => {
+            const num = parseInt(h.replace(/[^0-9]/g, ''), 10);
+            if (!isNaN(num) && [500, 200, 100, 50, 20, 10, 5, 2, 1].includes(num)) {
+                denomCols.push({ index: i, value: num });
+            }
+        });
+        rows.forEach(row => {
+            let rowCashAmount = 0;
+            denomCols.forEach(col => {
+                // Allows extraction of negative symbols
+                const count = parseInt(String(row[col.index]).replace(/[^0-9-]/g, ''), 10) || 0;
+                rowCashAmount += (count * col.value);
+            });
+            if (rowCashAmount > 0) {
+                inflow += rowCashAmount;
+            } else if (rowCashAmount < 0) {
+                outflow += Math.abs(rowCashAmount);
+            }
+        });
+    } else {
+        const inflowIndexes = headerLower.map((h, i) => /deposit|received|credit|incoming/.test(h) ? i : -1).filter(i => i !== -1);
+        const outflowIndexes = headerLower.map((h, i) => /withdrawn|given|debit|paid|expense/.test(h) ? i : -1).filter(i => i !== -1);
+
+        rows.forEach(row => {
+            inflowIndexes.forEach(i => { inflow += parseFloat((row[i] || "0").toString().replace(/[^0-9.-]/g, "")) || 0; });
+            outflowIndexes.forEach(i => { outflow += parseFloat((row[i] || "0").toString().replace(/[^0-9.-]/g, "")) || 0; });
+        });
+    }
 
     updateMetricsUI(inflow, outflow);
 }
@@ -2126,85 +2375,6 @@ function formatINR(value) {
     return "₹" + num.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
-function renderTable(headers, rows) {
-    try {
-        toggleDashboard(false);
-        document.querySelectorAll('.toolbar-row').forEach(row => row.style.display = 'flex');
-        document.getElementById('trace-toolbar-controls').style.display = 'none';
-        document.getElementById('vault-toolbar-controls').style.display = 'none';
-        document.getElementById('table-toolbar-controls').style.display = 'flex';
-        document.getElementById('tableFilter').value = "";
-        
-        activeFilters = {};
-        globalRawHeaders = headers; 
-        globalRawRows = rows; 
-        
-        rows = sortRowsByDate(headers, rows); 
-        
-        const isRegistry = currentTableMode === 'registry';
-        let idColIdx = headers.findIndex(h => /id|ref_id|reference/i.test(h));
-        if (idColIdx === -1) idColIdx = headers.length - 1;
-
-        let html = `
-          <div class='sheet-card'>
-            <div class='table-wrap' id="tableWrap">
-               <table id="mainDataTable">
-                    <thead>
-                        <tr>
-                            ${headers.map((h) => {
-                                const fieldName = h.toLowerCase().replace(/\s+/g, '_');
-                                return `
-                                <th onclick="openFilterModal('${fieldName}', '${h}')">
-                                    ${h} ▼
-                                </th>`;
-                            }).join('')}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows.map(row => {
-                            const rawId = row[idColIdx];
-                            const rowId = rawId ? String(rawId).trim() : "";
-                            return `
-                            <tr class="data-row" data-id="${rowId}" onclick="handleRowClick(this)">
-                                ${row.map((cell, idx) => {
-                                    const headerName = headers[idx].toLowerCase();
-                                    const fieldName = headerName.replace(/\s+/g, '_');
-                                    const isIdCol = idx === idColIdx;
-                                    const isDate = /date/i.test(headers[idx]);
-
-                                    const isInflow = /deposit|received|credit|incoming/.test(headerName);
-                                    const isOutflow = /withdrawn|given|debit|paid|expense/.test(headerName);
-                                    const isRunningBalance = headerName.includes("running balance");
-                                    const isAmount = isInflow || isOutflow || headerName.includes("total") || (headerName.includes("balance") && !isRunningBalance);
-
-                                    let content = cell ?? '';
-                                    if (isAmount) content = formatINR(cell);
-                                    if (isIdCol && !isRegistry) content = `<span class="id-badge">${cell}</span>`;
-                                    else if (isDate) content = formatTacticalDate(cell);
-
-                                    let amountStyle = "";
-                                    if (isRunningBalance) amountStyle = "color:var(--ledger); font-weight:800;";
-                                    else if (isInflow) amountStyle = "color:var(--success); font-weight:700;";
-                                    else if (isOutflow) amountStyle = "color:var(--danger); font-weight:700;";
-
-                                    return `<td data-field="${fieldName}" style="${amountStyle}">${content}</td>`;
-                                }).join('')}
-                            </tr>`;
-                        }).join('')}
-                    </tbody>
-               </table>
-            </div>
-        </div>`;
-
-        document.getElementById('displayArea').innerHTML = html;
-        applyColumnVisibility(); 
-        recalculateMetricsFromVisible();
-    } catch(err) {
-        console.error("Render Table Error:", err);
-        throw err; 
-    }
-}
-
 function handleRowClick(rowElement) {
     rowElement.classList.toggle('selected');
     recalculateMetricsFromSelected();
@@ -2223,184 +2393,12 @@ function getFormattedCellValue(row, idx, headers) {
     if (isDate) content = formatTacticalDate(content);
     return content;
 }
-
-function openFilterModal(fieldName, titleName) {
-    activeModalField = fieldName;
-    document.getElementById('filter-modal-title').innerText = `Filter: ${titleName}`;
-    document.getElementById('filter-search-input').value = "";
-    
-    const colIndex = globalRawHeaders.findIndex(h => h.toLowerCase().replace(/\s+/g, '_') === fieldName);
-    const isDateColumn = /date/i.test(globalRawHeaders[colIndex] || "");
-    
-    const valueSet = new Set();
-    const searchQuery = document.getElementById('tableFilter').value.toLowerCase().trim();
-
-    if (colIndex !== -1) {
-        globalRawRows.forEach(row => {
-            let passesFilters = true;
-
-            if (searchQuery) {
-                const rowMatchesSearch = row.some((cell, i) => {
-                    return String(getFormattedCellValue(row, i, globalRawHeaders)).toLowerCase().includes(searchQuery);
-                });
-                if (!rowMatchesSearch) passesFilters = false;
-            }
-
-            if (passesFilters) {
-                for (const filterField in activeFilters) {
-                    if (filterField === fieldName) continue; 
-                    
-                    const selectedValues = activeFilters[filterField];
-                    if (!selectedValues || selectedValues.length === 0) continue;
-                    
-                    const otherColIndex = globalRawHeaders.findIndex(h => h.toLowerCase().replace(/\s+/g, '_') === filterField);
-                    if (otherColIndex !== -1) {
-                        const formattedVal = getFormattedCellValue(row, otherColIndex, globalRawHeaders);
-                        if (!selectedValues.includes(normalizeValue(formattedVal))) {
-                            passesFilters = false;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (passesFilters) {
-                let rawValue = (row[colIndex] ?? "").toString().trim();
-                if (rawValue !== "") valueSet.add(rawValue);
-            }
-        });
-    }
-
-    const sorted = Array.from(valueSet).sort((a, b) => {
-        if (isDateColumn) {
-            return parseDateValue(a) - parseDateValue(b);
-        }
-        if (!isNaN(a) && !isNaN(b)) return parseFloat(a) - parseFloat(b);
-        return a.localeCompare(b);
-    });
-
-    const selected = activeFilters[fieldName] || [];
-    const container = document.getElementById('modal-options-container');
-    
-    container.innerHTML = sorted.map(val => `
-        <div class="filter-option ${selected.includes(normalizeValue(val)) ? 'selected' : ''}" data-value="${val}" onclick="toggleModalOptionChip(this)">
-            <span>${val}</span>
-        </div>
-    `).join('');
-
-    document.getElementById('global-filter-modal').classList.add('open');
-}
-
-function closeFilterModal(e) {
-    if (!e || e.target.id === 'global-filter-modal' || e.target.tagName === 'BUTTON') {
-        document.getElementById('global-filter-modal').classList.remove('open');
-    }
-}
-
-function filterColumnOptions(query) {
-    query = query.toLowerCase().trim();
-    const options = document.querySelectorAll('#modal-options-container .filter-option');
-    options.forEach(opt => {
-        const val = opt.getAttribute('data-value').toLowerCase();
-        opt.style.display = (!query || val.includes(query)) ? 'flex' : 'none';
-    });
-}
-
-function toggleModalOptionChip(element) {
-    element.classList.toggle('selected');
-}
-
-function selectAllModalOptions() {
-    const options = document.querySelectorAll('#modal-options-container .filter-option');
-    options.forEach(opt => {
-        if (opt.style.display !== 'none') {
-            opt.classList.add('selected');
-        }
-    });
-}
-
-function confirmModalFilter() {
-    if (!activeModalField) return;
-    const selectedChips = document.querySelectorAll('#modal-options-container .filter-option.selected');
-    const allChips = document.querySelectorAll('#modal-options-container .filter-option');
-
-    if (selectedChips.length === 0 || selectedChips.length === allChips.length) {
-        activeFilters[activeModalField] = [];
-    } else {
-        activeFilters[activeModalField] = Array.from(selectedChips).map(c => normalizeValue(c.getAttribute('data-value')));
-    }
-
-    applyFilters();
-    closeFilterModal();
-}
-
-function clearModalFilter() {
-    if (!activeModalField) return;
-    activeFilters[activeModalField] = [];
-    applyFilters();
-    closeFilterModal();
-}
-
 function resetAllFilters() {
     activeFilters = {};
     document.getElementById('tableFilter').value = "";
     applyFilters();
 }
 
-function applyFilters() {
-    const query = document.getElementById('tableFilter').value.toLowerCase().trim();
-    const rows = Array.from(document.querySelectorAll('.data-row'));
-
-    rows.forEach(row => {
-        const cells = Array.from(row.querySelectorAll('td'));
-        const matchesSearch = !query || cells.some(c => c.textContent.toLowerCase().includes(query));
-        let matchesFilters = true;
-
-        for (const field in activeFilters) {
-            const selectedValues = activeFilters[field];
-            if (!selectedValues || selectedValues.length === 0) continue;
-            const cell = row.querySelector(`td[data-field="${field}"]`);
-            if (!cell || !selectedValues.includes(normalizeValue(cell.textContent))) {
-                matchesFilters = false; break;
-            }
-        }
-
-        row.style.display = (matchesSearch && matchesFilters) ? "" : "none";
-    });
-
-    recalculateMetricsFromVisible();
-}
-
-function recalculateMetricsFromVisible() {
-    const rows = Array.from(document.querySelectorAll('#mainDataTable tbody tr'));
-    let totalInflow = 0, totalOutflow = 0;
-
-    rows.forEach(row => {
-        if (row.style.display !== 'none') {
-            const inflowCell = row.querySelector('td[style*="color:var(--success)"]');
-            const outflowCell = row.querySelector('td[style*="color:var(--danger)"]');
-            if (inflowCell) totalInflow += parseFloat(inflowCell.innerText.replace(/[^0-9.-]/g, "")) || 0;
-            if (outflowCell) totalOutflow += parseFloat(outflowCell.innerText.replace(/[^0-9.-]/g, "")) || 0;
-        }
-    });
-
-    updateMetricsUI(totalInflow, totalOutflow);
-}
-
-function recalculateMetricsFromSelected() {
-    const selectedRows = document.querySelectorAll('.data-row.selected');
-    if (selectedRows.length === 0) return recalculateMetricsFromVisible();
-    let totalInflow = 0, totalOutflow = 0;
-
-    selectedRows.forEach(row => {
-        const inflowCell = row.querySelector('td[style*="color:var(--success)"]');
-        const outflowCell = row.querySelector('td[style*="color:var(--danger)"]');
-        if (inflowCell) totalInflow += parseFloat(inflowCell.innerText.replace(/[^0-9.-]/g, "")) || 0;
-        if (outflowCell) totalOutflow += parseFloat(outflowCell.innerText.replace(/[^0-9.-]/g, "")) || 0;
-    });
-
-    updateMetricsUI(totalInflow, totalOutflow);
-}
 
 async function fetchAssociated() {
     if (!globalDataCache) return;
@@ -2670,6 +2668,131 @@ function showLogoutScreen() {
             </button>
         </div>
     `;
+}
+let mfTempFilters = {};
+let mfActiveHeaderIndex = 0;
+
+function openMasterFilter() {
+    if (!globalRawHeaders || globalRawHeaders.length === 0) return;
+    // Deep copy current active filters to a temporary object while modal is open
+    mfTempFilters = JSON.parse(JSON.stringify(activeFilters));
+    renderMfSidebar();
+    selectMfHeader(0); // Auto-select the first header on the left
+    document.getElementById('master-filter-modal').classList.add('open');
+}
+
+function closeMasterFilterModal(e) {
+    if (!e || e.target.id === 'master-filter-modal' || e.target.tagName === 'BUTTON') {
+        document.getElementById('master-filter-modal').classList.remove('open');
+    }
+}
+
+function renderMfSidebar() {
+    const sidebar = document.getElementById('mf-sidebar');
+    sidebar.innerHTML = globalRawHeaders.map((h, i) => {
+        const fieldName = h.toLowerCase().replace(/\s+/g, '_');
+        const hasFilter = mfTempFilters[fieldName] && mfTempFilters[fieldName].length > 0;
+        return `
+            <div class="mf-sidebar-item ${i === mfActiveHeaderIndex ? 'active' : ''} ${hasFilter ? 'has-filter' : ''}" 
+                 onclick="selectMfHeader(${i})">
+                ${h}
+            </div>
+        `;
+    }).join('');
+}
+
+function selectMfHeader(index) {
+    mfActiveHeaderIndex = index;
+    const headerName = globalRawHeaders[index];
+    const fieldName = headerName.toLowerCase().replace(/\s+/g, '_');
+    
+    // Update Active Styling on Left Sidebar
+    document.querySelectorAll('.mf-sidebar-item').forEach((el, i) => {
+        el.classList.toggle('active', i === index);
+    });
+
+    document.getElementById('mf-current-header').innerText = headerName;
+    document.getElementById('mf-search').value = '';
+
+    // Extract unique values directly from raw data for the Right Pane
+    const isDateColumn = /date/i.test(headerName);
+    const valueSet = new Set();
+    globalRawRows.forEach(row => {
+        let rawValue = (row[index] ?? "").toString().trim();
+        if (rawValue !== "") valueSet.add(rawValue);
+    });
+
+    const sorted = Array.from(valueSet).sort((a, b) => {
+        if (isDateColumn) return parseDateValue(a) - parseDateValue(b);
+        if (!isNaN(a) && !isNaN(b)) return parseFloat(a) - parseFloat(b);
+        return a.localeCompare(b);
+    });
+
+    const selected = mfTempFilters[fieldName] || [];
+    const container = document.getElementById('mf-options');
+    
+    container.innerHTML = sorted.map(val => `
+        <div class="filter-option ${selected.includes(normalizeValue(val)) ? 'selected' : ''}" 
+             data-value="${val}" onclick="toggleMfOption('${fieldName}', this)">
+            <span>${val}</span>
+        </div>
+    `).join('');
+}
+
+function toggleMfOption(fieldName, element) {
+    element.classList.toggle('selected');
+    const val = normalizeValue(element.getAttribute('data-value'));
+    
+    if (!mfTempFilters[fieldName]) mfTempFilters[fieldName] = [];
+    
+    const idx = mfTempFilters[fieldName].indexOf(val);
+    if (element.classList.contains('selected')) {
+        if (idx === -1) mfTempFilters[fieldName].push(val);
+    } else {
+        if (idx !== -1) mfTempFilters[fieldName].splice(idx, 1);
+    }
+    
+    renderMfSidebar(); // Update the yellow dot indicator on the left
+}
+
+function mfSelectAll() {
+    const fieldName = globalRawHeaders[mfActiveHeaderIndex].toLowerCase().replace(/\s+/g, '_');
+    const options = document.querySelectorAll('#mf-options .filter-option');
+    
+    if (!mfTempFilters[fieldName]) mfTempFilters[fieldName] = [];
+    
+    options.forEach(opt => {
+        if (opt.style.display !== 'none') {
+            opt.classList.add('selected');
+            const val = normalizeValue(opt.getAttribute('data-value'));
+            if (!mfTempFilters[fieldName].includes(val)) {
+                mfTempFilters[fieldName].push(val);
+            }
+        }
+    });
+    renderMfSidebar();
+}
+
+function filterMfOptions(query) {
+    query = query.toLowerCase().trim();
+    const options = document.querySelectorAll('#mf-options .filter-option');
+    options.forEach(opt => {
+        const val = opt.getAttribute('data-value').toLowerCase();
+        opt.style.display = (!query || val.includes(query)) ? 'flex' : 'none';
+    });
+}
+
+function applyMasterFilter() {
+    // Copy the temp selections into the real active filters and execute
+    activeFilters = JSON.parse(JSON.stringify(mfTempFilters));
+    applyFilters();
+    closeMasterFilterModal();
+}
+
+function resetMasterFilter() {
+    mfTempFilters = {};
+    renderMfSidebar();
+    selectMfHeader(mfActiveHeaderIndex);
 }
 
 function logout() {
