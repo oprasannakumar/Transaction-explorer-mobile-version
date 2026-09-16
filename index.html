@@ -1138,7 +1138,7 @@ function renderTable(headers, rows) {
         const narrIdx = headers.findIndex(h => /narration|purpose|reason|description|particulars/i.test(h));
         const outIdx = headers.findIndex(h => /withdrawn|given|debit|paid|expense/i.test(h));
         const inIdx = headers.findIndex(h => /deposit|received|credit|incoming/i.test(h));
-        const accIdx = headers.findIndex(h => /from\/ to|account|party/i.test(h));
+        const accIdx = headers.findIndex(h => /from\/ to|account|party|borrower/i.test(h));
         const purposeIdx = headers.findIndex(h => /^purpose$|transaction type|category/i.test(h));
         const explicitAmtIdx = headers.findIndex(h => /^amt$|^amount$/i.test(h));
         
@@ -1179,13 +1179,18 @@ function renderTable(headers, rows) {
             }
         }
 
-        const groupedMap = new Map();
+                const groupedMap = new Map();
         rows.forEach((row, index) => {
             const rawId = row[idColIdx] ? String(row[idColIdx]).trim() : "";
-            const key = rawId ? rawId : `UNMERGED_${index}`;
+            const acc = accIdx !== -1 && row[accIdx] ? String(row[accIdx]).trim() : "";
+            
+            // Only split by Reference ID + Borrower/Account if we are actively viewing the Loan module
+            const key = (selectedSheetName === "Loan" && rawId && acc) ? `${rawId}_${acc}` : (rawId ? rawId : `UNMERGED_${index}`);
+            
             if (!groupedMap.has(key)) groupedMap.set(key, []);
             groupedMap.get(key).push(row);
         });
+
 
         let cardsHtml = '';
 
