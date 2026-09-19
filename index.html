@@ -2866,20 +2866,41 @@ function selectMfHeader(index) {
     document.getElementById('mf-current-header').innerText = headerName;
     document.getElementById('mf-search').value = '';
 
-    // Extract unique values directly from raw data for the Right Pane
+    // Extract unique values from rows that match all OTHER active filters (Cascading / Dependent Filtering)
     const isDateColumn = /date/i.test(headerName);
     const isNarrColumn = /narration|purpose|reason|description|particulars/i.test(headerName);
     
     const valueSet = new Set();
+    
     globalRawRows.forEach(row => {
-        let rawValue = (row[index] ?? "").toString().trim();
-        
-        // Apply the exact same stripping logic used on the cards
-        if (isNarrColumn && typeof rawValue === 'string') {
-            rawValue = rawValue.replace(/\(from\)/gi, '').replace(/\(to\)/gi, '').trim();
+        // Check if this row matches all other active filters in mfTempFilters
+        let matchesOtherFilters = true;
+        for (const [filterField, allowedValues] of Object.entries(mfTempFilters)) {
+            if (filterField !== fieldName && allowedValues && allowedValues.length > 0) {
+                const colIdx = globalRawHeaders.findIndex(h => h.toLowerCase().replace(/\s+/g, '_') === filterField);
+                if (colIdx !== -1) {
+                    let cellVal = (row[colIdx] ?? "").toString().trim();
+                    const isColNarr = /narration|purpose|reason|description|particulars/i.test(globalRawHeaders[colIdx]);
+                    if (isColNarr && typeof cellVal === 'string') {
+                        cellVal = cellVal.replace(/\(from\)/gi, '').replace(/\(to\)/gi, '').trim();
+                    }
+                    const normalizedCellVal = normalizeValue(cellVal);
+                    if (!allowedValues.includes(normalizedCellVal)) {
+                        matchesOtherFilters = false;
+                        break;
+                    }
+                }
+            }
         }
-        
-        if (rawValue !== "") valueSet.add(rawValue);
+
+        // If the row satisfies all other column filters, include its value for this column
+        if (matchesOtherFilters) {
+            let rawValue = (row[index] ?? "").toString().trim();
+            if (isNarrColumn && typeof rawValue === 'string') {
+                rawValue = rawValue.replace(/\(from\)/gi, '').replace(/\(to\)/gi, '').trim();
+            }
+            if (rawValue !== "") valueSet.add(rawValue);
+        }
     });
 
     const sorted = Array.from(valueSet).sort((a, b) => {
